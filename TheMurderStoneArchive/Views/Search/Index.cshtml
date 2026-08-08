@@ -1,0 +1,28 @@
+@model IEnumerable<TheMurderStoneArchive.Models.MurderEvent>
+@{
+    ViewData["Title"] = "Search results";
+    var q = ViewData["Query"] as string ?? string.Empty;
+}
+
+<div class="container mt-3">
+    <h2>Search results</h2>
+    <p class="text-muted">Results for "<strong>@q</strong>"</p>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-light">No results found.</div>
+    }
+    else
+    {
+        <ul class="list-unstyled">
+            @foreach (var item in Model)
+            {
+                <li class="mb-3">
+                    <h4><a asp-controller="MurderEvents" asp-action="Details" asp-route-id="@item.Id">@item.Title</a></h4>
+                    <div class="text-muted small">@item.Year &middot; @item.Location?.Name</div>
+                    <p class="mb-0">@(item.Description?.Length > 300 ? item.Description.Substring(0,300) + "..." : item.Description)</p>
+                </li>
+            }
+        </ul>
+    }
+</div>

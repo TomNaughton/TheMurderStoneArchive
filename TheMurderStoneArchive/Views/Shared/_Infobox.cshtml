@@ -1,0 +1,19 @@
+@model TheMurderStoneArchive.Models.MurderEvent
+
+<aside class="infobox" role="complementary" aria-labelledby="infobox-title">
+    <h3 id="infobox-title" style="font-size:1rem;margin-top:0;margin-bottom:0.5rem;">Summary</h3>
+    <dl>
+        <dt><strong>Category</strong></dt>
+        <dd>@Model.Category</dd>
+        <dt><strong>Year</strong></dt>
+        <dd>@(Model.Year == 0 ? "Unknown" : Model.Year.ToString())</dd>
+        <dt><strong>Location</strong></dt>
+        <dd>@Model.Location?.Name</dd>
+        <dt><strong>Status</strong></dt>
+        <dd>
+            @if (Model.IsLost) { <span>Lost / Missing</span> }
+            else if (Model.IsProtected) { <span>Protected</span> }
+            else { <span>Recorded</span> }
+        </dd>
+    </dl>
+</aside>

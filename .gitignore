@@ -61,3 +61,6 @@ dkms.conf
 /TheMurderStoneArchive/Dockerfile
 /TheMurderStoneArchive/murder-stone-archive.tar
 /TheMurderStoneArchive/appsettings.Development.json
+/.vs/CopilotSnapshots
+/TheMurderStoneArchive/Migrations
+/TheMurderStoneArchive/appsettings.json

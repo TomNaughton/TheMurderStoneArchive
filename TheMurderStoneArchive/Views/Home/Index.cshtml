@@ -1,72 +1,128 @@
-﻿@{
-    ViewData["Title"] = "The Archive Map";
+﻿@model IEnumerable<TheMurderStoneArchive.Models.MurderEvent>
+@using System.Text.Json
+@using System.Text.Json.Serialization
+
+@{
+    ViewData["Title"] = "Murder Stone Archive";
+
+    var options = new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        ReferenceHandler = ReferenceHandler.IgnoreCycles
+    };
+    var jsonModel = JsonSerializer.Serialize(Model, options);
 }
 
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-<!-- Map Container -->
-<div class="text-center">
-    <h1 class="display-4">The Murder Stone Archive</h1>
-    <p>Documenting the historical monuments of grim deeds.</p>
-</div>
-
-<div id="archiveMap" style="height: 600px; width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>
-
-<!-- Bootstrap Modal -->
-<div class="modal fade" id="stoneModal" tabindex="-1" aria-labelledby="stoneModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title" id="stoneModalLabel">Stone Details</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p id="stoneModalDescription"></p>
-            </div>
-            <div class="modal-footer">
-                <a href="#" id="stoneModalLink" class="btn btn-primary w-100">View Full History</a>
-            </div>
+<div>
+    <div class="mb-3">
+        <h1 class="page-title">The Murder Stone Archive</h1>
+        <p class="lead">A factual catalogue of markers, legends, and boundary stones — drawn from historical records and field reports.</p>
+        <div class="mt-2">
+            <a class="me-3" asp-controller="MurderEvents" asp-action="Index">Browse archive</a>
+            <a asp-controller="MurderEvents" asp-action="Create">Suggest an entry</a>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Category Filter UI -->
+<div class="mb-3 d-flex justify-content-center align-items-center gap-2">
+    <label for="categoryFilter" class="fw-bold">Filter Category:</label>
+    <select id="categoryFilter" class="form-select w-auto" onchange="filterMarkers(this.value)">
+        <option value="all">All Categories</option>
+        <option value="0">Confirmed Murder Stone</option>
+        <option value="1">Folkloric / Legend</option>
+        <option value="2">Pudding Stone</option>
+        <option value="3">Boundary Marker</option>
+    </select>
+</div>
 
-    <script>
-        // 1. Initialize the map (Centered roughly on the UK, Zoom level 6)
-        var map = L.map('archiveMap').setView([54.5, -4.0], 6);
+<!-- Map Container -->
+<div id="archiveMap" class="map-container"></div>
 
-        // 2. Add the free OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+<!-- Leaflet CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-        // 3. Load the data passed from the C# Controller
-        var stones = @Html.Raw(ViewBag.MapData);
+<script>
+    // 1. Clean up existing map instance if reloading in DOM to prevent re-init errors
+    if (window.myArchiveMap) {
+        window.myArchiveMap.remove();
+        window.myArchiveMap = null;
+    }
 
-        // 4. Get a reference to the Bootstrap modal
-        var stoneModal = new bootstrap.Modal(document.getElementById('stoneModal'));
+    // 2. Initialize the Leaflet map instance
+    const map = L.map('archiveMap').setView([51.1118, -0.7311], 9);
+    window.myArchiveMap = map;
 
-        // 5. Loop through the data and create pins
-        stones.forEach(function(stone) {
-            var marker = L.marker([stone.Latitude, stone.Longitude]).addTo(map);
+    // Add OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
 
-            // Add click event to the marker
-            marker.on('click', function() {
-                // Populate modal data
-                document.getElementById('stoneModalLabel').innerText = stone.Title;
-                document.getElementById('stoneModalDescription').innerText = stone.ShortDescription;
+    // 3. Receive the serialized database records from C#
+    const rawData = '@Html.Raw(jsonModel)';
+    const murderEvents = JSON.parse(rawData);
 
-                // Update the button link to point to a future Details page
-                document.getElementById('stoneModalLink').href = '/Stone/Details/' + stone.Id;
+    let markerReferences = [];
 
-                // Show the modal
-                stoneModal.show();
-            });
+    // Helper function to pick marker color based on category enum value
+    function getMarkerColor(category) {
+        switch (category) {
+            case 0: return '#dc3545'; // Confirmed (Red)
+            case 1: return '#ffc107'; // Folkloric (Yellow/Amber)
+            case 2: return '#6c757d'; // PuddingStone (Grey)
+            case 3: return '#198754'; // BoundaryMarker (Green)
+            default: return '#0d6efd'; // Default Blue
+        }
+    }
+
+    // 4. Loop through database events and place map markers
+    murderEvents.forEach(item => {
+        if (item.location && item.location.latitude && item.location.longitude) {
+            const markerColor = getMarkerColor(item.category);
+            
+            const circleMarker = L.circleMarker([item.location.latitude, item.location.longitude], {
+                radius: 8,
+                fillColor: markerColor,
+                color: '#fff',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+
+            let categoryName = 'Unknown';
+            if (item.category === 0) categoryName = 'Confirmed Murder Stone';
+            else if (item.category === 1) categoryName = 'Folkloric / Legend';
+            else if (item.category === 2) categoryName = 'Pudding Stone';
+            else if (item.category === 3) categoryName = 'Boundary Marker';
+
+            circleMarker.bindPopup(`
+                <div>
+                    <h5>${item.title}</h5>
+                    <p class="mb-1"><strong>Year:</strong> ${item.year}</p>
+                    <p class="mb-1 text-muted"><em>Category: ${categoryName}</em></p>
+                    <p class="mb-1"><strong>Location:</strong> ${item.location.name || 'N/A'}</p>
+                    <p>${item.description || ''}</p>
+                </div>
+            `);
+
+            markerReferences.push({ marker: circleMarker, category: item.category });
+        }
+    });
+
+    // 5. Filter function triggered when dropdown selection changes
+    function filterMarkers(selectedCategory) {
+        markerReferences.forEach(entry => {
+            if (selectedCategory === 'all' || entry.category.toString() === selectedCategory) {
+                if (!map.hasLayer(entry.marker)) {
+                    entry.marker.addTo(map);
+                }
+            } else {
+                if (map.hasLayer(entry.marker)) {
+                    map.removeLayer(entry.marker);
+                }
+            }
         });
-    </script>
-}
+    }
+</script>
