@@ -1,8 +1,72 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "The Archive Map";
 }
 
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Map Container -->
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">The Murder Stone Archive</h1>
+    <p>Documenting the historical monuments of grim deeds.</p>
 </div>
+
+<div id="archiveMap" style="height: 600px; width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="stoneModal" tabindex="-1" aria-labelledby="stoneModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="stoneModalLabel">Stone Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="stoneModalDescription"></p>
+            </div>
+            <div class="modal-footer">
+                <a href="#" id="stoneModalLink" class="btn btn-primary w-100">View Full History</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // 1. Initialize the map (Centered roughly on the UK, Zoom level 6)
+        var map = L.map('archiveMap').setView([54.5, -4.0], 6);
+
+        // 2. Add the free OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // 3. Load the data passed from the C# Controller
+        var stones = @Html.Raw(ViewBag.MapData);
+
+        // 4. Get a reference to the Bootstrap modal
+        var stoneModal = new bootstrap.Modal(document.getElementById('stoneModal'));
+
+        // 5. Loop through the data and create pins
+        stones.forEach(function(stone) {
+            var marker = L.marker([stone.Latitude, stone.Longitude]).addTo(map);
+
+            // Add click event to the marker
+            marker.on('click', function() {
+                // Populate modal data
+                document.getElementById('stoneModalLabel').innerText = stone.Title;
+                document.getElementById('stoneModalDescription').innerText = stone.ShortDescription;
+
+                // Update the button link to point to a future Details page
+                document.getElementById('stoneModalLink').href = '/Stone/Details/' + stone.Id;
+
+                // Show the modal
+                stoneModal.show();
+            });
+        });
+    </script>
+}
