@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection.Metadata;
+using Microsoft.AspNetCore.Identity;
 
 namespace TheMurderStoneArchive.Models
 {
@@ -14,6 +15,7 @@ namespace TheMurderStoneArchive.Models
         [Display(Name = "Boundary Marker")]
         BoundaryMarker
     }
+
 
     public class MurderEvent
     {
@@ -43,5 +45,14 @@ namespace TheMurderStoneArchive.Models
 
         public ICollection<Perpetrator> Perpetrators { get; set; } = new List<Perpetrator>();
         public ICollection<Monument> Monuments { get; set; } = new List<Monument>();
+        public ICollection<MurderEventPhoto> Photos { get; set; } = new List<MurderEventPhoto>();
+        // Consent/acknowledgement stored when a user submits or creates an event
+        public bool ConfirmRightsAndTerms { get; set; } = false;
+        public DateTime? ConsentDateUtc { get; set; }
+
+        // Link to the user who created/submitted this event
+        // Stored as the Identity user Id (string)
+        public string? CreatedById { get; set; }
+        public IdentityUser? CreatedBy { get; set; }
     }
 }

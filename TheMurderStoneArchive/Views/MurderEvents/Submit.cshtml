@@ -1,4 +1,5 @@
 ﻿@model TheMurderStoneArchive.Models.MurderEvent
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 
 @{
     ViewData["Title"] = "Submit a Murder Stone";
@@ -10,7 +11,7 @@
     <hr />
     <div class="row">
         <div class="col-md-7">
-            <form asp-action="Submit">
+            <form id="submitForm" asp-action="Submit" enctype="multipart/form-data">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                 <div class="mb-3">
@@ -66,6 +67,23 @@
                     <label asp-for="IsLost" class="form-check-label">Is this stone currently lost, destroyed, or missing?</label>
                 </div>
 
+                <div class="mb-3">
+                    <label class="control-label">Photos (optional, up to 10)</label>
+                    <input type="file" name="Photos" id="photosInput" class="form-control" multiple accept="image/*" />
+                    <small class="form-text text-muted">Allowed: JPG, PNG, GIF, WEBP. Max 25 MB per file.</small>
+                    <div class="text-danger" id="photosError"></div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input asp-for="ConfirmRightsAndTerms" class="form-check-input" />
+                        <label asp-for="ConfirmRightsAndTerms" class="form-check-label">I confirm I own the rights to any uploaded images (or have permission) and I accept the <a asp-controller="Home" asp-action="Terms">Terms</a> and <a asp-controller="Home" asp-action="Privacy">Privacy Policy</a>.</label>
+                    </div>
+                    <span asp-validation-for="ConfirmRightsAndTerms" class="text-danger"></span>
+                </div>
+
+                <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response" />
+
                 <button type="submit" class="btn btn-primary">Submit for Review</button>
                 <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Cancel</a>
             </form>
@@ -77,4 +95,50 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        (function(){
+            const input = document.getElementById('photosInput');
+            const err = document.getElementById('photosError');
+            const MAX_FILES = 10;
+            const MAX_SIZE = 25 * 1024 * 1024; // 25MB
+            input && input.addEventListener('change', function(){
+                err.textContent = '';
+                if (this.files.length > MAX_FILES) {
+                    err.textContent = `You can upload up to ${MAX_FILES} photos.`;
+                    this.value = null;
+                    return;
+                }
+                for (let f of this.files) {
+                    if (f.size > MAX_SIZE) {
+                        err.textContent = `${f.name} exceeds the ${MAX_SIZE/1024/1024} MB limit.`;
+                        this.value = null;
+                        return;
+                    }
+                    if (!f.type.startsWith('image/')) {
+                        err.textContent = `${f.name} is not an image file.`;
+                        this.value = null;
+                        return;
+                    }
+                }
+            });
+        })();
+    </script>
+    <script src="https://www.google.com/recaptcha/api.js?render=@Configuration["ReCaptcha:SiteKey"]" async defer></script>
+    <script>
+        (function(){
+            var form = document.getElementById('submitForm');
+            if (!form) return;
+            form.addEventListener('submit', function(e){
+                e.preventDefault();
+                grecaptcha.ready(function(){
+                    grecaptcha.execute('@Configuration["ReCaptcha:SiteKey"]', {action: 'submit'}).then(function(token){
+                        var el = document.getElementById('g-recaptcha-response');
+                        if (!el) { el = document.createElement('input'); el.type='hidden'; el.name='g-recaptcha-response'; el.id='g-recaptcha-response'; form.appendChild(el); }
+                        el.value = token;
+                        form.submit();
+                    });
+                });
+            });
+        })();
+    </script>
 }

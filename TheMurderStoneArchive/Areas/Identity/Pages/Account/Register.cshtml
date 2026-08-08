@@ -1,5 +1,6 @@
 @page
 @model TheMurderStoneArchive.Areas.Identity.Pages.Account.RegisterModel
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Register";
@@ -10,7 +11,7 @@
         <h2 class="mb-3">Create an account</h2>
         <p class="muted">Register to submit stones and track your contributions.</p>
 
-        <form method="post">
+        <form id="registerForm" method="post">
             @Html.AntiForgeryToken()
             <div asp-validation-summary="All" class="text-danger"></div>
             @if (TempData["DebugErrors"] != null)
@@ -40,6 +41,7 @@
                 <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
             </div>
 
+            <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response" />
             <button type="submit" class="btn btn-primary w-100">Create account</button>
         </form>
 
@@ -51,4 +53,24 @@
 
 @section Scripts{
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://www.google.com/recaptcha/api.js?render=@Configuration["ReCaptcha:SiteKey"]" async defer></script>
+    <script>
+        (function(){
+            var form = document.getElementById('registerForm');
+            if (!form) return;
+            form.addEventListener('submit', function(e){
+                e.preventDefault();
+                grecaptcha.ready(function(){
+                    grecaptcha.execute('@Configuration["ReCaptcha:SiteKey"]', {action: 'register'}).then(function(token){
+                        var el = document.getElementById('g-recaptcha-response');
+                        if (!el) {
+                            el = document.createElement('input'); el.type = 'hidden'; el.name = 'g-recaptcha-response'; el.id = 'g-recaptcha-response'; form.appendChild(el);
+                        }
+                        el.value = token;
+                        form.submit();
+                    });
+                });
+            });
+        })();
+    </script>
 }

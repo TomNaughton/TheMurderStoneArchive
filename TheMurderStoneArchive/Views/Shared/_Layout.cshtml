@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - TheMurderStoneArchive</title>
+    <link rel="icon" type="image/svg+xml" href="~/images/logo.svg" />
+    <title>@ViewData["Title"] - The Murder Stone Archive</title>
     <script type="importmap"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:wght@300;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -12,11 +13,11 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm modern-navbar mb-3">
             <div class="container">
-                <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
-                    <img src="~/images/logo.svg" alt="The Murder Stone Archive" style="height:32px;margin-right:10px;" />
-                    <span class="ms-2">Murder Stone Archive</span>
+                <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="~/images/logo.svg" alt="The Murder Stone Archive" style="height:32px;" />
+                    <span class="site-title">The Murder Stone Archive</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -29,10 +30,10 @@
                         </li> *@
                     </ul>
 
-                    <form class="d-flex my-2 my-lg-0" role="search" asp-controller="Search" asp-action="Index" method="get">
+                        <form class="d-flex my-2 my-lg-0" role="search" asp-controller="Search" asp-action="Index" method="get">
                         <label for="q" class="visually-hidden">Search</label>
                         <input id="q" name="q" class="form-control form-control-sm me-2" type="search" placeholder="Search archive" aria-label="Search the archive" />
-                        <button class="btn btn-outline-secondary btn-sm" type="submit">Search</button>
+                        <button class="btn btn-outline-theme btn-sm" type="submit">Search</button>
                     </form>
 
                     <ul class="navbar-nav ms-3 d-flex align-items-center">
@@ -41,19 +42,16 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true" width="16" height="16" class="me-2" focusable="false">
                                     <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-                                <span>Submit Stone</span>
+                                <span>Submit</span>
                             </a>
                         </li>
 
                         @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
                         {
-                            <li class="nav-item me-2"><a class="btn btn-outline-light btn-sm" asp-controller="MurderEvents" asp-action="Pending">Pending</a></li>
-                            <li class="nav-item me-2"><a class="btn btn-outline-light btn-sm" asp-controller="MurderEvents" asp-action="Index">Admin</a></li>
+                            <li class="nav-item me-2"><a class="btn btn-outline-theme btn-sm" asp-controller="MurderEvents" asp-action="Pending">Pending</a></li>
                         }
 
-                        <li class="nav-item">
-                            <partial name="_LoginPartial" />
-                        </li>
+                        <partial name="_LoginPartial" />
                     </ul>
                 </div>
             </div>
@@ -66,8 +64,13 @@
     </div>
 
     <footer class="footer bg-dark text-light py-4 mt-5">
-        <div class="container text-center small">
-            &copy; 2026 - Murder Stone Archive &middot; <a class="text-decoration-underline text-light" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        <div class="container text-center small d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <div>&copy; 2026 - The Murder Stone Archive</div>
+            <div class="mt-2 mt-md-0">
+                <a asp-controller="Home" asp-action="Privacy" class="text-light me-3">Privacy</a>
+                <a asp-controller="Home" asp-action="Terms" class="text-light me-3">Terms</a>
+                <a asp-controller="Home" asp-action="DMCA" class="text-light">DMCA</a>
+            </div>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

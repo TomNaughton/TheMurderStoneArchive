@@ -12,11 +12,15 @@ namespace TheMurderStoneArchive.Areas.Identity.Pages.Account
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
+        private readonly System.Net.Http.IHttpClientFactory _httpClientFactory;
 
-        public RegisterModel(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+        public RegisterModel(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, Microsoft.Extensions.Configuration.IConfiguration configuration, System.Net.Http.IHttpClientFactory httpClientFactory)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _configuration = configuration;
+            _httpClientFactory = httpClientFactory;
         }
 
         [BindProperty]
@@ -48,6 +52,13 @@ namespace TheMurderStoneArchive.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
+            // Validate captcha first (reCAPTCHA v3)
+            var token = Request.Form["g-recaptcha-response"].ToString();
+            if (string.IsNullOrEmpty(token) || !await VerifyReCaptchaAsync(token, "register"))
+            {
+                ModelState.AddModelError(string.Empty, "Captcha verification failed. Please try again.");
+                return Page();
+            }
             if (!ModelState.IsValid)
             {
                 // Collect ModelState errors so they are visible in the validation summary
@@ -102,6 +113,53 @@ namespace TheMurderStoneArchive.Areas.Identity.Pages.Account
                 ModelState.AddModelError(string.Empty, error.Description);
             }
             return Page();
+        }
+
+        private async Task<bool> VerifyReCaptchaAsync(string token, string expectedAction = null, double minScore = 0.5)
+        {
+            try
+            {
+                var secret = _configuration["ReCaptcha:SecretKey"];
+                if (string.IsNullOrEmpty(secret)) return false;
+                var client = _httpClientFactory.CreateClient();
+                var values = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    {"secret", secret},
+                    {"response", token}
+                };
+                var content = new System.Net.Http.FormUrlEncodedContent(values);
+                var resp = await client.PostAsync("https://www.google.com/recaptcha/api/siteverify", content);
+                if (!resp.IsSuccessStatusCode) return false;
+                var json = await resp.Content.ReadAsStringAsync();
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                if (!doc.RootElement.TryGetProperty("success", out var success) || !success.GetBoolean())
+                    return false;
+
+                double score = 0.0;
+                if (doc.RootElement.TryGetProperty("score", out var scoreElem) && scoreElem.ValueKind == System.Text.Json.JsonValueKind.Number)
+                {
+                    score = scoreElem.GetDouble();
+                }
+
+                if (score < minScore)
+                    return false;
+
+                if (!string.IsNullOrEmpty(expectedAction))
+                {
+                    if (doc.RootElement.TryGetProperty("action", out var actionElem))
+                    {
+                        var action = actionElem.GetString();
+                        if (!string.Equals(action, expectedAction, StringComparison.OrdinalIgnoreCase))
+                            return false;
+                    }
+                }
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

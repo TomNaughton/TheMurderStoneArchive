@@ -6,12 +6,18 @@ html { font-size: 15px; }
 
 :root {
   --primary: #1565d8; /* nicer blue */
+  --accent: #ff6b6b; /* for highlights */
+  --secondary: #0f1720; /* dark text accent */
+  --danger: #c53030;
   --primary-contrast: #fff;
   --muted: #6c757d;
   --container-max: 1100px;
   --content-bg: #ffffff;
   --surface: #fbfcfd;
   --card-shadow: 0 6px 18px rgba(16,24,40,0.06);
+  --navbar-bg: rgba(255,255,255,0.65);
+  --glass-border: rgba(16,24,40,0.06);
+  --footer-bg: linear-gradient(180deg, #0b1220, #0f1720);
 }
 
 * { box-sizing: border-box; }
@@ -19,12 +25,14 @@ html { font-size: 15px; }
 html, body { height: 100%; }
 
 body {
-  margin: 0 0 80px 0; /* leave room for footer */
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: #111315;
   background: linear-gradient(180deg, #f6f8fb 0%, #eef3f8 100%);
   -webkit-font-smoothing: antialiased;
 }
+
+/* Smooth transitions for subtle UI changes */
+* { transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease; }
 
 h1,h2,h3,h4,h5,h6 {
   font-family: 'Merriweather', Georgia, 'Times New Roman', serif;
@@ -41,130 +49,350 @@ h1,h2,h3,h4,h5,h6 {
   box-shadow: var(--card-shadow);
 }
 
-.navbar-brand { font-weight: 700; font-size: 1.05rem; }
-.navbar { padding: 0.6rem 0; }
-.navbar .nav-link { color: #2b2f33; }
-.navbar .nav-link:hover { color: var(--primary); }
-
-.page-title { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-.lead { color: var(--muted); }
-
-/* Buttons */
-.btn-primary {
-  background-color: var(--primary);
-  border-color: var(--primary);
+/* Modern glassy navbar */
+.modern-navbar {
+  background: var(--navbar-bg);
+  border-radius: 12px;
+  padding: 0.45rem 0.6rem;
+  box-shadow: 0 6px 22px rgba(2,6,23,0.06);
+  backdrop-filter: blur(6px) saturate(120%);
+  border: 1px solid var(--glass-border);
 }
-.btn-primary:hover { background-color: #0f4fc1; border-color: #0f4fc1; }
-.btn-outline-secondary { color: #374151; border-color: #d1d5db; }
+.modern-navbar .container { align-items: center; display: flex; }
+.site-title { display: inherit; font-weight: 700; font-size: 1rem; color: inherit; }
 
-/* Focus states (accessible) */
-.btn:focus, .form-control:focus, .form-check-input:focus {
-  outline: none;
-  box-shadow: 0 0 0 0.15rem rgba(21,101,216,0.18);
-}
-
-/* Links */
-a { color: var(--primary); }
-a:visited { color: #0d47a1; }
-a:hover { color: #083a8a; text-decoration: underline; }
-
-/* Infobox */
-.infobox {
-  border: 1px solid #e6eef9;
-  background: var(--surface);
-  padding: 12px;
-  float: right;
-  margin: 0 0 1rem 1rem;
-  max-width: 320px;
-  font-size: 0.94rem;
-  border-radius: 6px;
-}
-@media (max-width: 767px) {
-  .infobox { float: none; max-width: 100%; margin-left: 0; margin-right: 0; }
-}
-
-/* Tables: cleaner, more readable */
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 10px 12px; border-bottom: 1px solid #eef2f7; }
-tbody tr:hover { background: #fbfcff; }
-th { background: #f8fafc; text-align: left; font-weight: 600; }
-
-/* Cards and callouts */
-.card { border: 1px solid #e8eef9; border-radius: 8px; box-shadow: var(--card-shadow); }
-.fact { background: #f8fafc; padding: 12px; border-left: 4px solid #e2e8f0; margin: 14px 0; border-radius: 6px; }
-
-/* Forms */
-.form-control { border-radius: 6px; }
-.form-control.form-control-sm { padding: 6px 10px; }
-
-/* Search in navbar: limit width on large screens */
-form[role="search"] { max-width: 420px; }
-
-/* Footer */
-.footer { position: fixed; left: 0; right: 0; bottom: 0; }
-.footer a { color: rgba(255,255,255,0.9); }
-
-/* Ensure footer sits above content and map doesn't get clipped */
-.footer { z-index: 1000; }
-
-/* Map container: responsive height and bottom spacing to avoid footer overlap */
-.map-container {
-  height: 60vh;
-  min-height: 360px;
-  max-height: 760px;
-  width: 100%;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.08);
-  margin-bottom: 24px; /* space before footer */
-  background: #f8fafc;
-}
-
-@media (max-width: 767px) {
-  .map-container { height: 50vh; min-height: 260px; }
-}
-
-/* Small helpers */
-.muted { color: var(--muted); }
-
-.container.main-container > main { min-height: 40vh; }
-
-.references { font-size: 0.95rem; }
-
-.visually-hidden { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); }
-
-/* Authentication pages styling */
-.auth-container { display:flex; align-items:center; justify-content:center; padding: 36px 16px; }
-.auth-card { width: 100%; max-width: 420px; background: var(--content-bg); padding: 26px; border-radius: 10px; box-shadow: var(--card-shadow); border: 1px solid #e9f0fb; }
-.auth-card h2 { margin-bottom: 6px; }
-.auth-card .form-label { font-weight: 600; }
-.auth-card .muted { color: var(--muted); }
-.auth-card .text-danger { font-size: 0.95rem; }
-
-/* Make identity links/buttons blend with navbar styles when used there */
-.navbar .nav-link.btn { padding-top: .35rem; padding-bottom: .35rem; }
-
-/* Submit button (prominent, pill-shaped) */
-.btn-submit {
-  --btn-bg-start: #1e88e5;
-  --btn-bg-end: #1565d8;
-  background: linear-gradient(180deg, var(--btn-bg-start), var(--btn-bg-end));
-  color: var(--primary-contrast);
-  border: none;
-  padding: 0.4rem 0.9rem;
-  border-radius: 999px;
-  box-shadow: 0 8px 20px rgba(21,101,216,0.18);
-  font-weight: 600;
-  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
-}
-.btn-submit svg { width: 16px; height: 16px; opacity: 0.95; }
-.btn-submit:hover, .btn-submit:focus { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(21,101,216,0.22); text-decoration: none; }
-.btn-submit:active { transform: translateY(0); box-shadow: 0 6px 14px rgba(21,101,216,0.16); }
-.btn-submit[aria-disabled="true"] { opacity: 0.6; pointer-events: none; }
-
-/* Make submit button expand inside collapsed navbar on small screens */
 @media (max-width: 575.98px) {
-  .navbar-nav .btn-submit { width: 100%; justify-content: center; }
-  .navbar-nav .btn { width: 100%; margin-bottom: 6px; }
-  .navbar-nav .nav-item { width: 100%; }
-  .navbar-collapse { padding: 12px 0; }
+    .site-title { display: none; }
 }
+
+    /* (Theme toggle removed) */
+
+    .navbar-brand {
+        font-weight: 700;
+        font-size: 1.05rem;
+    }
+
+    .navbar {
+        padding: 0.6rem 0;
+    }
+
+        .navbar .nav-link {
+            color: #2b2f33;
+        }
+
+            .navbar .nav-link:hover {
+                color: var(--primary);
+            }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .lead {
+        color: var(--muted);
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
+
+        .btn-primary:hover {
+            background-color: #0f4fc1;
+            border-color: #0f4fc1;
+        }
+
+    .btn-outline-secondary {
+        color: #374151;
+        border-color: #d1d5db;
+    }
+
+    /* Theme utilities */
+    .btn-theme {
+        background-color: var(--primary);
+        border-color: var(--primary);
+        color: var(--primary-contrast);
+    }
+
+        .btn-theme:hover, .btn-theme:focus {
+            background-color: #0f4fc1;
+            border-color: #0f4fc1;
+            color: var(--primary-contrast);
+        }
+
+    .btn-outline-theme {
+        color: var(--primary);
+        border-color: rgba(21,101,216,0.2);
+        background: transparent;
+    }
+
+        .btn-outline-theme:hover, .btn-outline-theme:focus {
+            color: var(--primary-contrast);
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+    /* Links use theme color by default, but utility class .link-theme provides stronger styling */
+    .link-theme {
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+        .link-theme:hover {
+            color: #083a8a;
+            text-decoration: underline;
+        }
+
+    /* Focus states (accessible) */
+    .btn:focus, .form-control:focus, .form-check-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 0.15rem rgba(21,101,216,0.18);
+    }
+
+    /* Links */
+    a {
+        color: var(--primary);
+    }
+
+        a:hover {
+            color: #083a8a;
+            text-decoration: underline;
+        }
+
+    /* Infobox */
+    .infobox {
+        border: 1px solid #e6eef9;
+        background: var(--surface);
+        padding: 12px;
+        float: right;
+        margin: 0 0 1rem 1rem;
+        max-width: 320px;
+        font-size: 0.94rem;
+        border-radius: 6px;
+    }
+
+    @media (max-width: 767px) {
+        .infobox {
+            float: none;
+            max-width: 100%;
+            margin-left: 0;
+            margin-right: 0;
+        }
+    }
+
+    /* Tables: cleaner, more readable */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #eef2f7;
+    }
+
+    tbody tr:hover {
+        background: #fbfcff;
+    }
+
+    th {
+        background: #f8fafc;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    /* Cards and callouts */
+    .card {
+        border: 1px solid #e8eef9;
+        border-radius: 8px;
+        box-shadow: var(--card-shadow);
+    }
+
+    .fact {
+        background: #f8fafc;
+        padding: 12px;
+        border-left: 4px solid #e2e8f0;
+        margin: 14px 0;
+        border-radius: 6px;
+    }
+
+    /* Forms */
+    .form-control {
+        border-radius: 6px;
+    }
+
+        .form-control.form-control-sm {
+            padding: 6px 10px;
+        }
+
+    /* Search in navbar: limit width on large screens */
+    form[role="search"] {
+        max-width: 420px;
+    }
+
+    /* Footer */
+    .footer a {
+        color: rgba(255,255,255,0.95);
+    }
+
+    /* Ensure footer sits above content and map doesn't get clipped */
+    .footer {
+        z-index: 1000;
+        background: var(--footer-bg);
+    }
+
+    /* Map container: responsive height and bottom spacing to avoid footer overlap */
+    .map-container {
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+        background: #f8fafc;
+        overflow: hidden;
+        /* CSS-only responsive sizing: preferred is viewport-based but clamped to sensible bounds */
+        height: clamp(180px, 45vh, 60vh);
+        max-height: 80vh;
+    }
+
+    /* Small helpers */
+    .muted {
+        color: var(--muted);
+    }
+
+    /* Layout helpers to let the main content expand to the remaining viewport
+   height so .map-container can fill available space without being overlapped
+   by the footer. Uses flexbox on the page and on the main container.
+*/
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh; /* ensure the body spans the viewport */
+    }
+
+    /* Make the page main area flexible between header and footer */
+    main {
+        flex: 1 1 auto;
+    }
+
+    .container.main-container {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+    }
+
+        .container.main-container > main {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+        }
+
+    .references {
+        font-size: 0.95rem;
+    }
+
+    .visually-hidden {
+        position: absolute !important;
+        height: 1px;
+        width: 1px;
+        overflow: hidden;
+        clip: rect(1px, 1px, 1px, 1px);
+    }
+
+    /* Authentication pages styling */
+    .auth-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 36px 16px;
+    }
+
+    .auth-card {
+        width: 100%;
+        max-width: 420px;
+        background: var(--content-bg);
+        padding: 26px;
+        border-radius: 10px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid #e9f0fb;
+    }
+
+        .auth-card h2 {
+            margin-bottom: 6px;
+        }
+
+        .auth-card .form-label {
+            font-weight: 600;
+        }
+
+        .auth-card .muted {
+            color: var(--muted);
+        }
+
+        .auth-card .text-danger {
+            font-size: 0.95rem;
+        }
+
+    /* Make identity links/buttons blend with navbar styles when used there */
+    .navbar .nav-link.btn {
+        padding-top: .35rem;
+        padding-bottom: .35rem;
+    }
+
+    /* Submit button (prominent, pill-shaped) */
+    .btn-submit {
+        --btn-bg-start: #1e88e5;
+        --btn-bg-end: #1565d8;
+        background: linear-gradient(180deg, var(--btn-bg-start), var(--btn-bg-end));
+        color: var(--primary-contrast);
+        border: none;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        box-shadow: 0 8px 20px rgba(21,101,216,0.18);
+        font-weight: 600;
+        transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+    }
+
+        .btn-submit svg {
+            width: 16px;
+            height: 16px;
+            opacity: 0.95;
+        }
+
+        .btn-submit:hover, .btn-submit:focus {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 26px rgba(21,101,216,0.22);
+            text-decoration: none;
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+            box-shadow: 0 6px 14px rgba(21,101,216,0.16);
+        }
+
+        .btn-submit[aria-disabled="true"] {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+    /* Make submit button expand inside collapsed navbar on small screens */
+    @media (max-width: 575.98px) {
+        .navbar-nav .btn-submit {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .navbar-nav .btn {
+            width: 100%;
+            margin-bottom: 6px;
+        }
+
+        .navbar-nav .nav-item {
+            width: 100%;
+        }
+
+        .navbar-collapse {
+            padding: 12px 0;
+        }
+    }

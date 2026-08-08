@@ -64,3 +64,4 @@ dkms.conf
 /.vs/CopilotSnapshots
 /TheMurderStoneArchive/Migrations
 /TheMurderStoneArchive/appsettings.json
+/TheMurderStoneArchive/wwwroot/uploads/murderevents

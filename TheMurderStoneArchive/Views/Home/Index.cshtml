@@ -19,7 +19,7 @@
         <p class="lead">A factual catalogue of markers, legends, and boundary stones — drawn from historical records and field reports.</p>
         <div class="mt-2">
             <a class="me-3" asp-controller="MurderEvents" asp-action="Index">Browse archive</a>
-            <a asp-controller="MurderEvents" asp-action="Create">Suggest an entry</a>
+            <a asp-controller="MurderEvents" asp-action="Submit">Suggest an entry</a>
         </div>
     </div>
 </div>
@@ -51,7 +51,8 @@
     }
 
     // 2. Initialize the Leaflet map instance
-    const map = L.map('archiveMap').setView([51.1118, -0.7311], 9);
+    // Center over the UK to show the whole island (approximate centre and zoom)
+    const map = L.map('archiveMap').setView([54.0, -2.0], 5);
     window.myArchiveMap = map;
 
     // Add OpenStreetMap tile layer

@@ -19,6 +19,21 @@ public class HomeController : Controller
         return View(events);
     }
 
+    public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    public IActionResult Terms()
+    {
+        return View();
+    }
+
+    public IActionResult DMCA()
+    {
+        return View();
+    }
+
     [HttpGet]
     [Route("sitemap.xml")]
     public async Task<IActionResult> Sitemap()

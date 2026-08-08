@@ -1,4 +1,9 @@
-﻿@model TheMurderStoneArchive.Models.MurderEvent
+﻿@using System.Security.Claims
+@model TheMurderStoneArchive.Models.MurderEvent
+
+@{
+    var currentUserId = User.Identity?.IsAuthenticated == true ? User.FindFirstValue(ClaimTypes.NameIdentifier) : null;
+}
 
 <div class="container mt-4">
     @await Html.PartialAsync("_Infobox", Model)
@@ -11,10 +16,39 @@
         <p>@Model.Description</p>
     </div>
 
+    @if (Model.Photos != null && Model.Photos.Any())
+    {
+        <div class="mb-4">
+            <h3>Photos</h3>
+            <div class="row">
+                @foreach (var p in Model.Photos)
+                {
+                    <div class="col-6 col-md-3 mb-3">
+                        <a href="@Url.Action("Photo", "MurderEvents", new { id = p.Id })" target="_blank" rel="noopener">
+                            <img src="@Url.Action("Photo", "MurderEvents", new { id = p.Id })" class="img-fluid rounded shadow-sm" alt="@p.FileName" />
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
     <div class="fact">
         <strong>Note:</strong> Entries are drawn from historical records and community submissions. Where possible, sources are indicated on each page.
     </div>
+    @if (!Model.IsApproved)
+    {
+        <div class="alert alert-warning">Note: This entry is user-submitted and pending approval by an administrator.</div>
+    }
+    else
+    {
+        <div class="alert alert-info">User-contributed content — may not be verified.</div>
+    }
 
-    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    @* Edit only visible to admins or creator *@
+    @if (User.IsInRole("Admin") || (!string.IsNullOrEmpty(Model.CreatedById) && Model.CreatedById == currentUserId))
+    {
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    }
     <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>

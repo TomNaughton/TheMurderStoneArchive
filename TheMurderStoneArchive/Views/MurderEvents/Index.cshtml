@@ -1,13 +1,46 @@
-﻿@model IEnumerable<TheMurderStoneArchive.Models.MurderEvent>
+﻿@using System.Security.Claims
+@model IEnumerable<TheMurderStoneArchive.Models.MurderEvent>
 
 @{
     ViewData["Title"] = "Manage Murder Events";
+    var currentUserId = User.Identity?.IsAuthenticated == true ? User.FindFirstValue(ClaimTypes.NameIdentifier) : null;
 }
 
 <div class="container mt-4">
+    @if (TempData["SubmissionSuccessMessage"] != null)
+    {
+        <div aria-live="polite" aria-atomic="true" class="position-relative">
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+                <div id="submissionToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="8000">
+                    <div class="toast-header">
+                        <strong class="me-auto">Submission</strong>
+                        <small class="text-muted">Now</small>
+                        <button type="button" class="btn-close ms-2 mb-1" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var toastEl = document.getElementById('submissionToast');
+            if (toastEl) {
+                try {
+                    var bsToast = new bootstrap.Toast(toastEl);
+                    bsToast.show();
+                } catch (e) {
+                    var body = toastEl.querySelector('.toast-body');
+                    if (body) alert(body.textContent || body.innerText || 'Submission successful');
+                }
+            }
+        });
+    </script>
+}
+                    <div class="toast-body">@TempData["SubmissionSuccessMessage"]</div>
+                </div>
+            </div>
+        </div>
+    }
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Archive Management</h1>
-        <a asp-action="Create" class="btn btn-primary">Add New Event</a>
+        <h1>All Entries</h1>
     </div>
 
     <table class="table table-striped table-hover">
@@ -22,16 +55,27 @@
         <tbody>
             @foreach (var item in Model)
             {
+                if (item.IsApproved || (!string.IsNullOrEmpty(item.CreatedById) && item.CreatedById == currentUserId))
+                {
                 <tr>
                     <td>@item.Title</td>
                     <td>@item.Year</td>
                     <td>@item.Location?.Name</td>
-                    <td>
+                <td>
+                    @if (User.IsInRole("Admin") || (!string.IsNullOrEmpty(item.CreatedById) && item.CreatedById == currentUserId))
+                    {
                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
-                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
+                    }
+
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
+
+                    @if (User.IsInRole("Admin") || (!string.IsNullOrEmpty(item.CreatedById) && item.CreatedById == currentUserId))
+                    {
                         <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
-                    </td>
+                    }
+                </td>
                 </tr>
+                }
             }
         </tbody>
     </table>
