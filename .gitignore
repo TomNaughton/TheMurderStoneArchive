@@ -60,3 +60,4 @@ dkms.conf
 /TheMurderStoneArchive/docker-compose.yml
 /TheMurderStoneArchive/Dockerfile
 /TheMurderStoneArchive/murder-stone-archive.tar
+/TheMurderStoneArchive/appsettings.Development.json
