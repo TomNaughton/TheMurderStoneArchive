@@ -46,6 +46,7 @@ namespace TheMurderStoneArchive.Models
         public ICollection<Perpetrator> Perpetrators { get; set; } = new List<Perpetrator>();
         public ICollection<Monument> Monuments { get; set; } = new List<Monument>();
         public ICollection<MurderEventPhoto> Photos { get; set; } = new List<MurderEventPhoto>();
+        public ICollection<MurderEventVideo> Videos { get; set; } = new List<MurderEventVideo>();
         // Consent/acknowledgement stored when a user submits or creates an event
         public bool ConfirmRightsAndTerms { get; set; } = false;
         public DateTime? ConsentDateUtc { get; set; }

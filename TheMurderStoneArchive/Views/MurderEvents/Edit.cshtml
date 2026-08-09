@@ -56,6 +56,32 @@
                     <input type="file" name="Photos" id="photosInput" class="form-control" multiple accept="image/*" />
                     <small class="form-text text-muted">Allowed: JPG, PNG, GIF, WEBP. Max 25 MB per file.</small>
                     <div class="text-danger" id="photosError"></div>
+                    <div id="photoPreviewContainer" class="mt-2 d-flex flex-wrap gap-2"></div>
+                </div>
+
+                @* Existing photos *@
+                @if (Model.Photos != null && Model.Photos.Any())
+                {
+                    <div class="mb-3">
+                        <label class="control-label">Existing Photos</label>
+                        <div id="existingPhotos" class="d-flex flex-wrap gap-2">
+                            @foreach (var p in Model.Photos)
+                            {
+                                <div class="border p-1 bg-light" style="width:120px;position:relative;" data-photo-id="@p.Id">
+                                    <img src="@Url.Action("Photo", "MurderEvents", new { id = p.Id })" style="width:100%;height:80px;object-fit:cover;" />
+                                    <button type="button" class="btn btn-sm btn-danger" style="position:absolute;top:4px;right:4px;">✕</button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="control-label">YouTube video links (optional, up to 3)</label>
+                    <input type="url" name="YouTubeLinks" class="form-control mb-2" value="@(Model.Videos != null && Model.Videos.ElementAtOrDefault(0) != null ? Model.Videos.ElementAt(0).Url : string.Empty)" placeholder="https://youtube.com/watch?v=..." />
+                    <input type="url" name="YouTubeLinks" class="form-control mb-2" value="@(Model.Videos != null && Model.Videos.ElementAtOrDefault(1) != null ? Model.Videos.ElementAt(1).Url : string.Empty)" placeholder="https://youtube.com/watch?v=..." />
+                    <input type="url" name="YouTubeLinks" class="form-control" value="@(Model.Videos != null && Model.Videos.ElementAtOrDefault(2) != null ? Model.Videos.ElementAt(2).Url : string.Empty)" placeholder="https://youtube.com/watch?v=..." />
+                    <small class="form-text text-muted">Provide full YouTube URLs (optional). Leave empty to remove.</small>
                 </div>
 
                 <div class="d-flex gap-2">
@@ -82,28 +108,99 @@
         (function(){
             const input = document.getElementById('photosInput');
             const err = document.getElementById('photosError');
+            const preview = document.getElementById('photoPreviewContainer');
+            const existing = document.getElementById('existingPhotos');
             const MAX_FILES = 10;
             const MAX_SIZE = 25 * 1024 * 1024; // 25MB
+            const dt = new DataTransfer();
+
+            function createPreviewForFile(file, uid) {
+                const url = URL.createObjectURL(file);
+                const wrapper = document.createElement('div');
+                wrapper.className = 'border p-1 bg-light';
+                wrapper.style.width = '120px';
+                wrapper.style.position = 'relative';
+                wrapper.dataset.uid = uid;
+
+                const img = document.createElement('img');
+                img.src = url;
+                img.style.width = '100%';
+                img.style.height = '80px';
+                img.style.objectFit = 'cover';
+                wrapper.appendChild(img);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-sm btn-danger';
+                btn.style.position = 'absolute';
+                btn.style.top = '4px';
+                btn.style.right = '4px';
+                btn.textContent = '✕';
+                btn.addEventListener('click', function(){
+                    for (let i = 0; i < dt.items.length; i++) {
+                        if (dt.items[i].getAsFile().name === file.name && dt.items[i].getAsFile().size === file.size) {
+                            dt.items.remove(i);
+                            break;
+                        }
+                    }
+                    input.files = dt.files;
+                    wrapper.remove();
+                    err.textContent = '';
+                });
+                wrapper.appendChild(btn);
+
+                return wrapper;
+            }
+
             input && input.addEventListener('change', function(){
                 err.textContent = '';
-                if (this.files.length > MAX_FILES) {
-                    err.textContent = `You can upload up to ${MAX_FILES} photos.`;
-                    this.value = null;
+                const files = Array.from(this.files || []);
+                // count existing photos still present
+                const existingCount = existing ? existing.querySelectorAll('[data-photo-id]').length : 0;
+                if ((existingCount + dt.files.length + files.length) > MAX_FILES) {
+                    err.textContent = `Total photos cannot exceed ${MAX_FILES}.`;
                     return;
                 }
-                for (let f of this.files) {
+                for (let f of files) {
                     if (f.size > MAX_SIZE) {
                         err.textContent = `${f.name} exceeds the ${MAX_SIZE/1024/1024} MB limit.`;
-                        this.value = null;
                         return;
                     }
                     if (!f.type.startsWith('image/')) {
                         err.textContent = `${f.name} is not an image file.`;
-                        this.value = null;
                         return;
                     }
                 }
+
+                for (let f of files) {
+                    const uid = Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+                    dt.items.add(f);
+                    const node = createPreviewForFile(f, uid);
+                    preview.appendChild(node);
+                }
+                input.files = dt.files;
             });
+
+            // existing delete buttons behaviour: mark for deletion by adding hidden inputs
+            if (existing) {
+                existing.querySelectorAll('[data-photo-id]').forEach(function(el){
+                    const btn = el.querySelector('button');
+                    btn && btn.addEventListener('click', function(){
+                        const id = el.dataset.photoId;
+                        // add hidden input to form
+                        const form = el.closest('form');
+                        if (form) {
+                            const hidden = document.createElement('input');
+                            hidden.type = 'hidden';
+                            hidden.name = 'DeletedPhotoIds';
+                            hidden.value = id;
+                            form.appendChild(hidden);
+                        }
+                        el.remove();
+                        err.textContent = '';
+                    });
+                });
+            }
         })();
     </script>
 }

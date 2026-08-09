@@ -18,5 +18,6 @@ namespace TheMurderStoneArchive.Data
         public DbSet<Perpetrator> Perpetrators { get; set; }
         public DbSet<Monument> Monuments { get; set; }
         public DbSet<MurderEventPhoto> MurderEventPhotos { get; set; }
+        public DbSet<MurderEventVideo> MurderEventVideos { get; set; }
     }
 }

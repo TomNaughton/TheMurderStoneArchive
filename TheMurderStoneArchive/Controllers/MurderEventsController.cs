@@ -28,6 +28,48 @@ namespace TheMurderStoneArchive.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
+        // Helper to extract YouTube video id from common URL forms
+        private static string? ExtractYouTubeId(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return null;
+            try
+            {
+                var uri = new UriBuilder(url).Uri;
+                var host = uri.Host.ToLowerInvariant();
+                // youtu.be short link
+                if (host.EndsWith("youtu.be"))
+                {
+                    var seg = uri.AbsolutePath.Trim('/');
+                    return string.IsNullOrEmpty(seg) ? null : seg;
+                }
+
+                // youtube.com forms
+                if (host.Contains("youtube.com"))
+                {
+                    // /embed/ID
+                    if (uri.AbsolutePath.StartsWith("/embed/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var id = uri.AbsolutePath.Substring("/embed/".Length).Trim('/');
+                        return string.IsNullOrEmpty(id) ? null : id;
+                    }
+
+                    // parse query without System.Web: use QueryHelpers
+                    var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+                    if (query.TryGetValue("v", out var v) && !string.IsNullOrEmpty(v))
+                        return v.ToString();
+                }
+
+                // fallback: try regex to find id-like segment
+                var m = System.Text.RegularExpressions.Regex.Match(url, @"(?:v=|/v/|/embed/|youtu\.be/)([A-Za-z0-9_-]{6,})");
+                if (m.Success && m.Groups.Count > 1) return m.Groups[1].Value;
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         // GET: MurderEvents
         [AllowAnonymous] // Allows public visitors to see the list/index if needed
         public async Task<IActionResult> Index()
@@ -96,6 +138,7 @@ namespace TheMurderStoneArchive.Controllers
                 .Include(m => m.Monuments)
                 .Include(m => m.Perpetrators)
                 .Include(m => m.Photos)
+                .Include(m => m.Videos)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (murderEvent == null) return NotFound();
@@ -118,7 +161,7 @@ namespace TheMurderStoneArchive.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<IActionResult> Create(MurderEvent murderEvent, List<IFormFile>? Photos)
+        public async Task<IActionResult> Create(MurderEvent murderEvent, List<IFormFile>? Photos, List<string>? YouTubeLinks)
         {
             const int MaxFiles = 10;
             const long MaxFileSize = 25L * 1024L * 1024L; // 25 MB per file
@@ -242,6 +285,69 @@ namespace TheMurderStoneArchive.Controllers
                     await _context.SaveChangesAsync();
                 }
 
+                    // Handle YouTube links: read from form (YouTubeLinks) and replace existing entries
+                    var youTubeLinks = Request.Form["YouTubeLinks"].ToArray();
+                    if (youTubeLinks != null)
+                    {
+                        // remove existing
+                        var existingVideos = _context.MurderEventVideos.Where(v => v.MurderEventId == murderEvent.Id);
+                        _context.MurderEventVideos.RemoveRange(existingVideos);
+                        // add up to 3
+                        var added = 0;
+                        foreach (var link in youTubeLinks)
+                        {
+                            if (added >= 3) break;
+                            if (string.IsNullOrWhiteSpace(link)) continue;
+                            var vid = ExtractYouTubeId(link);
+                            if (vid == null) continue;
+                            _context.MurderEventVideos.Add(new Models.MurderEventVideo { MurderEventId = murderEvent.Id, Url = link, VideoId = vid });
+                            added++;
+                        }
+                        await _context.SaveChangesAsync();
+                    }
+
+                // Process YouTube links (up to 3)
+                if (YouTubeLinks != null && YouTubeLinks.Count > 0)
+                {
+                    var added = 0;
+                    foreach (var link in YouTubeLinks)
+                    {
+                        if (added >= 3) break;
+                        if (string.IsNullOrWhiteSpace(link)) continue;
+                        var id = ExtractYouTubeId(link);
+                        if (id == null) continue;
+                        _context.MurderEventVideos.Add(new Models.MurderEventVideo
+                        {
+                            MurderEventId = murderEvent.Id,
+                            Url = link,
+                            VideoId = id
+                        });
+                        added++;
+                    }
+                    if (added > 0) await _context.SaveChangesAsync();
+                }
+
+                // Process YouTube links (up to 3)
+                if (YouTubeLinks != null && YouTubeLinks.Count > 0)
+                {
+                    var added = 0;
+                    foreach (var link in YouTubeLinks)
+                    {
+                        if (added >= 3) break;
+                        if (string.IsNullOrWhiteSpace(link)) continue;
+                        var id = ExtractYouTubeId(link);
+                        if (id == null) continue;
+                        _context.MurderEventVideos.Add(new Models.MurderEventVideo
+                        {
+                            MurderEventId = murderEvent.Id,
+                            Url = link,
+                            VideoId = id
+                        });
+                        added++;
+                    }
+                    if (added > 0) await _context.SaveChangesAsync();
+                }
+
                 return RedirectToAction(nameof(Index));
             }
             return View(murderEvent);
@@ -255,6 +361,8 @@ namespace TheMurderStoneArchive.Controllers
 
             var murderEvent = await _context.MurderEvents
                 .Include(m => m.Location)
+                .Include(m => m.Photos)
+                .Include(m => m.Videos)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (murderEvent == null) return NotFound();
@@ -271,7 +379,7 @@ namespace TheMurderStoneArchive.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<IActionResult> Edit(int id, MurderEvent murderEvent, List<IFormFile>? Photos)
+        public async Task<IActionResult> Edit(int id, MurderEvent murderEvent, List<IFormFile>? Photos, List<string>? YouTubeLinks, List<int>? DeletedPhotoIds)
         {
             if (id != murderEvent.Id) return NotFound();
 
@@ -293,6 +401,14 @@ namespace TheMurderStoneArchive.Controllers
                     const int MaxFiles = 10;
                     const long MaxFileSize = 25L * 1024L * 1024L; // 25 MB
                     var allowedExt = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+
+                    // If user marked existing photos for deletion, remove them first
+                    if (DeletedPhotoIds != null && DeletedPhotoIds.Count > 0)
+                    {
+                        var toDelete = _context.MurderEventPhotos.Where(p => DeletedPhotoIds.Contains(p.Id) && p.MurderEventId == id);
+                        _context.MurderEventPhotos.RemoveRange(toDelete);
+                        await _context.SaveChangesAsync();
+                    }
 
                     var existingCount = await _context.MurderEventPhotos.CountAsync(p => p.MurderEventId == id);
                     if (Photos != null && (existingCount + Photos.Count) > MaxFiles)
@@ -366,6 +482,26 @@ namespace TheMurderStoneArchive.Controllers
                                 FileSize = file.Length,
                                 Data = bytes
                             });
+                        }
+                        await _context.SaveChangesAsync();
+                    }
+
+                    // Replace existing YouTube video links if the edit form posted them.
+                    // If YouTubeLinks is non-null we treat it as the user's intent to replace the list (even if all entries are empty).
+                    if (YouTubeLinks != null)
+                    {
+                        var existingVideos = _context.MurderEventVideos.Where(v => v.MurderEventId == id);
+                        _context.MurderEventVideos.RemoveRange(existingVideos);
+
+                        var added = 0;
+                        foreach (var link in YouTubeLinks)
+                        {
+                            if (added >= 3) break;
+                            if (string.IsNullOrWhiteSpace(link)) continue;
+                            var vid = ExtractYouTubeId(link);
+                            if (vid == null) continue;
+                            _context.MurderEventVideos.Add(new MurderEventVideo { MurderEventId = id, Url = link, VideoId = vid });
+                            added++;
                         }
                         await _context.SaveChangesAsync();
                     }

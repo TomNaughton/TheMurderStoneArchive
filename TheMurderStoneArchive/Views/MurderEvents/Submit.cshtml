@@ -72,6 +72,15 @@
                     <input type="file" name="Photos" id="photosInput" class="form-control" multiple accept="image/*" />
                     <small class="form-text text-muted">Allowed: JPG, PNG, GIF, WEBP. Max 25 MB per file.</small>
                     <div class="text-danger" id="photosError"></div>
+                    <div id="photoPreviewContainer" class="mt-2 d-flex flex-wrap gap-2"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="control-label">YouTube video links (optional, up to 3)</label>
+                    <input type="url" name="YouTubeLinks" class="form-control mb-2" placeholder="https://youtube.com/watch?v=..." />
+                    <input type="url" name="YouTubeLinks" class="form-control mb-2" placeholder="https://youtube.com/watch?v=..." />
+                    <input type="url" name="YouTubeLinks" class="form-control" placeholder="https://youtube.com/watch?v=..." />
+                    <small class="form-text text-muted">Provide full YouTube URLs (optional).</small>
                 </div>
 
                 <div class="mb-3">
@@ -99,27 +108,77 @@
         (function(){
             const input = document.getElementById('photosInput');
             const err = document.getElementById('photosError');
+            const preview = document.getElementById('photoPreviewContainer');
             const MAX_FILES = 10;
             const MAX_SIZE = 25 * 1024 * 1024; // 25MB
+            const dt = new DataTransfer();
+
+            function createPreviewForFile(file, uid) {
+                const url = URL.createObjectURL(file);
+                const wrapper = document.createElement('div');
+                wrapper.className = 'border p-1 bg-light';
+                wrapper.style.width = '120px';
+                wrapper.style.position = 'relative';
+                wrapper.dataset.uid = uid;
+
+                const img = document.createElement('img');
+                img.src = url;
+                img.style.width = '100%';
+                img.style.height = '80px';
+                img.style.objectFit = 'cover';
+                wrapper.appendChild(img);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-sm btn-danger';
+                btn.style.position = 'absolute';
+                btn.style.top = '4px';
+                btn.style.right = '4px';
+                btn.textContent = '✕';
+                btn.addEventListener('click', function(){
+                    // remove from DataTransfer
+                    for (let i = 0; i < dt.items.length; i++) {
+                        const it = dt.items[i].getAsFile();
+                        if (!it) continue;
+                        if (it.name === file.name && it.size === file.size && it.type === file.type) {
+                            dt.items.remove(i);
+                            break;
+                        }
+                    }
+                    input.files = dt.files;
+                    wrapper.remove();
+                    err.textContent = '';
+                });
+                wrapper.appendChild(btn);
+
+                return wrapper;
+            }
+
             input && input.addEventListener('change', function(){
                 err.textContent = '';
-                if (this.files.length > MAX_FILES) {
+                const files = Array.from(this.files || []);
+                if ((dt.files.length + files.length) > MAX_FILES) {
                     err.textContent = `You can upload up to ${MAX_FILES} photos.`;
-                    this.value = null;
                     return;
                 }
-                for (let f of this.files) {
+                for (let f of files) {
                     if (f.size > MAX_SIZE) {
                         err.textContent = `${f.name} exceeds the ${MAX_SIZE/1024/1024} MB limit.`;
-                        this.value = null;
                         return;
                     }
                     if (!f.type.startsWith('image/')) {
                         err.textContent = `${f.name} is not an image file.`;
-                        this.value = null;
                         return;
                     }
                 }
+
+                for (let f of files) {
+                    const uid = Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+                    dt.items.add(f);
+                    const node = createPreviewForFile(f, uid);
+                    preview.appendChild(node);
+                }
+                input.files = dt.files;
             });
         })();
     </script>

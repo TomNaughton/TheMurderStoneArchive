@@ -5,6 +5,94 @@
     var currentUserId = User.Identity?.IsAuthenticated == true ? User.FindFirstValue(ClaimTypes.NameIdentifier) : null;
 }
 
+<style>
+    /* Gallery sizing: constrain carousel to viewport height and ensure media fits inside */
+    .event-gallery .carousel-inner,
+    #eventCarousel .carousel-inner {
+        height: 60vh;
+        max-height: 60vh;
+    }
+    /* Keep carousel-item default display to preserve Bootstrap transitions; center media inside a wrapper */
+    .event-gallery .carousel-item,
+    #eventCarousel .carousel-item {
+        height: 100%;
+    }
+    .event-gallery .media-wrap,
+    #eventCarousel .media-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        width: 100%;
+    }
+    .event-gallery .media-wrap img,
+    #eventCarousel .media-wrap img {
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto;
+    }
+    .event-gallery .media-wrap .ratio,
+    #eventCarousel .media-wrap .ratio {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .event-gallery .media-wrap .ratio iframe,
+    #eventCarousel .media-wrap .ratio iframe {
+        max-height: 100%;
+        max-width: 100%;
+    }
+
+    @@media (max-width: 576px) {
+        .event-gallery .carousel-inner,
+        #eventCarousel .carousel-inner { height: 40vh; max-height: 40vh; }
+    }
+
+    /* Subtle gallery background and improved control visibility */
+    .event-gallery {
+        background-color: #fbfbfc; /* very light gray */
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 4px rgba(16,24,40,0.04);
+    }
+    .event-gallery .carousel-indicators {
+        bottom: 0.25rem;
+    }
+    .event-gallery .carousel-control-prev-icon,
+    .event-gallery .carousel-control-next-icon {
+        /* Use Bootstrap's secondary gray for better contrast */
+        background-color: #6c757d;
+        border-radius: 50%;
+        width: 2.25rem;
+        height: 2.25rem;
+        background-size: 1.25rem 1.25rem;
+        background-position: center;
+        opacity: 0.95;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+        transition: box-shadow .15s ease-in-out, transform .15s ease-in-out;
+        transform: none;
+    }
+    .event-gallery .carousel-control-prev:hover .carousel-control-prev-icon,
+    .event-gallery .carousel-control-next:hover .carousel-control-next-icon {
+        box-shadow: 0 8px 18px rgba(0,0,0,0.32);
+        transform: scale(1.06);
+    }
+    .event-gallery .carousel-control-prev,
+    .event-gallery .carousel-control-next {
+        width: 3rem;
+    }
+    /* Prevent gallery from visually overlapping the floated infobox on wider screens
+       Reserve space equal to the infobox max-width plus its left margin (320px + 1rem)
+       so the carousel will flow to the left of the infobox instead of under it. */
+    @@media (min-width: 768px) {
+        .event-gallery { margin-right: calc(320px + 1rem); }
+    }
+</style>
+
 <div class="container mt-4">
     @await Html.PartialAsync("_Infobox", Model)
 
@@ -16,18 +104,53 @@
         <p>@Model.Description</p>
     </div>
 
-    @if (Model.Photos != null && Model.Photos.Any())
+    @{
+        var mediaItems = new List<object>(); // objects will be either MurderEventPhoto or MurderEventVideo
+        if (Model.Photos != null) mediaItems.AddRange(Model.Photos.Cast<object>());
+        if (Model.Videos != null) mediaItems.AddRange(Model.Videos.Cast<object>());
+    }
+
+    @if (mediaItems.Any())
     {
         <div class="mb-4">
-            <h3>Photos</h3>
-            <div class="row">
-                @foreach (var p in Model.Photos)
+            <h3>Gallery</h3>
+            <div id="eventCarousel" class="carousel slide event-gallery" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    @for (int i = 0; i < mediaItems.Count; i++)
+                    {
+                        <button type="button" data-bs-target="#eventCarousel" data-bs-slide-to="@i" class="@(i==0?"active":"")" aria-current="@(i==0?"true":"false")" aria-label="Slide @(i+1)"></button>
+                    }
+                </div>
+                <div class="carousel-inner">
+                    @for (int i = 0; i < mediaItems.Count; i++)
+                    {
+                        var item = mediaItems[i];
+                        <div class="carousel-item @(i==0?"active":"")">
+                            <div class="media-wrap">
+                            @if (item is TheMurderStoneArchive.Models.MurderEventPhoto p)
+                            {
+                                <img src="@Url.Action("Photo", "MurderEvents", new { id = p.Id })" class="d-block" alt="@p.FileName" />
+                            }
+                            else if (item is TheMurderStoneArchive.Models.MurderEventVideo v && !string.IsNullOrEmpty(v.VideoId))
+                            {
+                                <div class="ratio ratio-16x9">
+                                    <iframe src="https://www.youtube.com/embed/@v.VideoId" title="YouTube video player" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                                </div>
+                            }
+                            </div>
+                        </div>
+                    }
+                </div>
+                @if (mediaItems.Count > 1)
                 {
-                    <div class="col-6 col-md-3 mb-3">
-                        <a href="@Url.Action("Photo", "MurderEvents", new { id = p.Id })" target="_blank" rel="noopener">
-                            <img src="@Url.Action("Photo", "MurderEvents", new { id = p.Id })" class="img-fluid rounded shadow-sm" alt="@p.FileName" />
-                        </a>
-                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#eventCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#eventCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
                 }
             </div>
         </div>

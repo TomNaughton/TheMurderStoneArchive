@@ -16,4 +16,88 @@
             else { <span>Recorded</span> }
         </dd>
     </dl>
+
+    @* Map: show a small Leaflet map with a pin when coordinates are available. Placed inside the aside so width is constrained to the infobox *@
+    @{
+        var latObj = Model.Location?.Latitude;
+        var lonObj = Model.Location?.Longitude;
+    }
+    @if (latObj != null && lonObj != null && latObj != 0 && lonObj != 0)
+    {
+        <div id="infoboxMap-@Model.Id" class="infobox-map mt-2" style="height:200px;width:100%;max-width:100%;box-sizing:border-box;"></div>
+
+        <div class="mt-2 d-flex justify-content-center w-100">
+            <a id="directionsBtn-@Model.Id" class="btn btn-outline-primary btn-sm w-100" target="_blank" rel="noopener noreferrer">Get Directions</a>
+        </div>
+
+        <script>
+            (function(){
+                var lat = @Html.Raw(latObj.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                var lon = @Html.Raw(lonObj.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                var mapId = 'infoboxMap-' + @Model.Id;
+                var label = "@System.Net.WebUtility.UrlEncode(Model.Location?.Name ?? Model.Title)";
+
+                function initMap() {
+                    try {
+                        var map = L.map(mapId, { scrollWheelZoom: false, dragging: true }).setView([lat, lon], 13);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            maxZoom: 19,
+                            attribution: '&copy; OpenStreetMap contributors'
+                        }).addTo(map);
+                        L.marker([lat, lon]).addTo(map);
+                    } catch (e) {
+                        console.warn('Map init failed', e);
+                    }
+                }
+
+                if (typeof L === 'undefined') {
+                    // load Leaflet CSS
+                    var link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                    document.head.appendChild(link);
+
+                    // load Leaflet script
+                    var s = document.createElement('script');
+                    s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                    s.onload = function(){ initMap(); };
+                    s.onerror = function(){ console.warn('Failed to load Leaflet script'); };
+                    document.body.appendChild(s);
+                } else {
+                    initMap();
+                }
+
+                // Build and set a directions link that prefers native map apps on mobile, falls back to Google Maps
+                try {
+                    var btn = document.getElementById('directionsBtn-' + @Model.Id);
+                    if (btn) {
+                        var appleMaps = 'maps://?daddr=' + lat + ',' + lon + '&q=' + label;
+                        var appleMapsHttp = 'https://maps.apple.com/?daddr=' + lat + ',' + lon + '&q=' + label;
+                        var androidGeo = 'geo:' + lat + ',' + lon + '?q=' + lat + ',' + lon + '(' + label + ')';
+                        var googleMaps = 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lon;
+
+                        var ua = navigator.userAgent || '';
+                        if (/iPhone|iPad|iPod/i.test(ua)) {
+                            // Prefer Apple Maps HTTP link — works in browser and opens app on iOS where available
+                            btn.href = appleMapsHttp;
+                        } else if (/Android/i.test(ua)) {
+                            // Try geo: which may open native app; fall back to Google Maps if not handled
+                            btn.href = androidGeo;
+                            // Also provide a fallback click handler to open Google Maps in case geo: is blocked
+                            btn.addEventListener('click', function(e){
+                                // let the browser try geo: first; if it doesn't navigate within 700ms, open Google Maps
+                                var fallback = function(){ window.open(googleMaps, '_blank'); };
+                                var t = setTimeout(fallback, 700);
+                                // clear timer if page visibility changes (likely opened app)
+                                var visChange = function(){ clearTimeout(t); document.removeEventListener('visibilitychange', visChange); };
+                                document.addEventListener('visibilitychange', visChange);
+                            });
+                        } else {
+                            btn.href = googleMaps;
+                        }
+                    }
+                } catch (e) { console.warn('Directions link setup failed', e); }
+            })();
+        </script>
+    }
 </aside>
