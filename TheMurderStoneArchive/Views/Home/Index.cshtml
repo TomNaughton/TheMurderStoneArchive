@@ -16,10 +16,10 @@
 <div>
     <div class="mb-3">
         <h1 class="page-title">The Murder Stone Archive</h1>
-        <p class="lead">A factual catalogue of markers, legends, and boundary stones — drawn from historical records and field reports.</p>
+        <p class="lead">A free, publicly curated catalogue of markers, legends, and boundary stones — drawn from historical records and field reports.</p>
         <div class="mt-2">
-            <a class="me-3" asp-controller="MurderEvents" asp-action="Index">Browse archive</a>
-            <a asp-controller="MurderEvents" asp-action="Submit">Suggest an entry</a>
+            <a class="me-3 me-3 btn btn-primary btn-sm text-white" asp-controller="MurderEvents" asp-action="Index">Browse archive</a>
+            <a class="btn btn-outline-theme btn-sm" asp-controller="MurderEvents" asp-action="Submit">Suggest an entry</a>
         </div>
     </div>
 </div>
@@ -61,9 +61,8 @@
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // 3. Receive the serialized database records from C#
-    const rawData = '@Html.Raw(jsonModel)';
-    const murderEvents = JSON.parse(rawData);
+    // 3. Receive the serialized database records from C# (emit as a JS object literal)
+    const murderEvents = @Html.Raw(jsonModel);
 
     let markerReferences = [];
 
@@ -101,10 +100,10 @@
             circleMarker.bindPopup(`
                 <div>
                     <h5>${item.title}</h5>
-                    <p class="mb-1"><strong>Year:</strong> ${item.year}</p>
-                    <p class="mb-1 text-muted"><em>Category: ${categoryName}</em></p>
-                    <p class="mb-1"><strong>Location:</strong> ${item.location.name || 'N/A'}</p>
-                    <p>${item.description || ''}</p>
+                    <p class="m-0"><strong>Year:</strong> ${item.year}</p>
+                    <p class="m-0"><strong>Location:</strong> ${item.location.name || 'N/A'}</p>
+                    <p class="m-0 text-muted"><em>Category: ${categoryName}</em></p>
+                    <a class="btn btn-primary btn-sm mt-2 text-white w-100" href="/MurderEvents/Details/${item.id}">More Info</a>
                 </div>
             `);
 

@@ -29,6 +29,13 @@ public class HomeController : Controller
         return View();
     }
 
+    public IActionResult Donate()
+    {
+        // Simple donate page to surface donation options (PayPal / Ko-fi / BuyMeACoffee)
+        // Replace the example links with your real donation links
+        return View();
+    }
+
     public IActionResult DMCA()
     {
         return View();

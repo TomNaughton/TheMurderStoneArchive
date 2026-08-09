@@ -67,9 +67,9 @@
                         <div id="existingPhotos" class="d-flex flex-wrap gap-2">
                             @foreach (var p in Model.Photos)
                             {
-                                <div class="border p-1 bg-light" style="width:120px;position:relative;" data-photo-id="@p.Id">
-                                    <img src="@Url.Action("Photo", "MurderEvents", new { id = p.Id })" style="width:100%;height:80px;object-fit:cover;" />
-                                    <button type="button" class="btn btn-sm btn-danger" style="position:absolute;top:4px;right:4px;">✕</button>
+                                <div class="border p-1 bg-light photo-thumb" data-photo-id="@p.Id">
+                                    <img src="@Url.Action("Photo", "MurderEvents", new { id = p.Id })" class="photo-thumb-img" />
+                                    <button type="button" class="btn btn-sm btn-danger photo-remove-btn">✕</button>
                                 </div>
                             }
                         </div>
@@ -117,24 +117,17 @@
             function createPreviewForFile(file, uid) {
                 const url = URL.createObjectURL(file);
                 const wrapper = document.createElement('div');
-                wrapper.className = 'border p-1 bg-light';
-                wrapper.style.width = '120px';
-                wrapper.style.position = 'relative';
+                wrapper.className = 'border p-1 bg-light photo-thumb';
                 wrapper.dataset.uid = uid;
 
                 const img = document.createElement('img');
                 img.src = url;
-                img.style.width = '100%';
-                img.style.height = '80px';
-                img.style.objectFit = 'cover';
+                img.className = 'photo-thumb-img';
                 wrapper.appendChild(img);
 
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'btn btn-sm btn-danger';
-                btn.style.position = 'absolute';
-                btn.style.top = '4px';
-                btn.style.right = '4px';
+                btn.className = 'btn btn-sm btn-danger photo-remove-btn';
                 btn.textContent = '✕';
                 btn.addEventListener('click', function(){
                     for (let i = 0; i < dt.items.length; i++) {

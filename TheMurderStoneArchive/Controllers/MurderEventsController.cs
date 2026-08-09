@@ -402,19 +402,20 @@ namespace TheMurderStoneArchive.Controllers
                     const long MaxFileSize = 25L * 1024L * 1024L; // 25 MB
                     var allowedExt = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
 
-                    // If user marked existing photos for deletion, remove them first
-                    if (DeletedPhotoIds != null && DeletedPhotoIds.Count > 0)
-                    {
-                        var toDelete = _context.MurderEventPhotos.Where(p => DeletedPhotoIds.Contains(p.Id) && p.MurderEventId == id);
-                        _context.MurderEventPhotos.RemoveRange(toDelete);
-                        await _context.SaveChangesAsync();
-                    }
-
-                    var existingCount = await _context.MurderEventPhotos.CountAsync(p => p.MurderEventId == id);
+                    // Compute existing photo count excluding any photos the user marked for deletion
+                    var existingCount = await _context.MurderEventPhotos.CountAsync(p => p.MurderEventId == id && (DeletedPhotoIds == null || !DeletedPhotoIds.Contains(p.Id)));
                     if (Photos != null && (existingCount + Photos.Count) > MaxFiles)
                     {
                         ModelState.AddModelError("Photos", $"Total photos cannot exceed {MaxFiles}. You already have {existingCount}.");
                         return View(murderEvent);
+                    }
+
+                    // If user marked existing photos for deletion, mark them for removal in the context (defer SaveChanges until after all modifications)
+                    if (DeletedPhotoIds != null && DeletedPhotoIds.Count > 0)
+                    {
+                        var toDelete = _context.MurderEventPhotos.Where(p => DeletedPhotoIds.Contains(p.Id) && p.MurderEventId == id);
+                        _context.MurderEventPhotos.RemoveRange(toDelete);
+                        // do not call SaveChangesAsync here; batch with later changes
                     }
 
                     // Validate files server-side before committing update
@@ -443,7 +444,6 @@ namespace TheMurderStoneArchive.Controllers
                     }
 
                     _context.Update(murderEvent);
-                    await _context.SaveChangesAsync();
 
                     if (Photos != null && Photos.Count > 0)
                     {
@@ -483,7 +483,7 @@ namespace TheMurderStoneArchive.Controllers
                                 Data = bytes
                             });
                         }
-                        await _context.SaveChangesAsync();
+                        // defer saving here - we'll persist all changes in a single SaveChangesAsync below
                     }
 
                     // Replace existing YouTube video links if the edit form posted them.
@@ -503,6 +503,8 @@ namespace TheMurderStoneArchive.Controllers
                             _context.MurderEventVideos.Add(new MurderEventVideo { MurderEventId = id, Url = link, VideoId = vid });
                             added++;
                         }
+
+                        // Persist all pending changes (deletions, updates, new photos/videos) in a single transaction
                         await _context.SaveChangesAsync();
                     }
                 }
@@ -513,7 +515,7 @@ namespace TheMurderStoneArchive.Controllers
                     else
                         throw;
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Details), new { id = murderEvent.Id });
             }
             return View(murderEvent);
         }

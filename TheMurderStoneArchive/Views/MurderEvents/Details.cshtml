@@ -85,93 +85,111 @@
     .event-gallery .carousel-control-next {
         width: 3rem;
     }
-    /* Prevent gallery from visually overlapping the floated infobox on wider screens
-       Reserve space equal to the infobox max-width plus its left margin (320px + 1rem)
-       so the carousel will flow to the left of the infobox instead of under it. */
+    /* On larger screens use a two-column layout provided by the Bootstrap grid
+       instead of reserving space with a float-based margin. This keeps the
+       gallery and infobox in separate columns so they won't overlap. */
     @@media (min-width: 768px) {
-        .event-gallery { margin-right: calc(320px + 1rem); }
+        .event-gallery { margin-right: 0; }
+    }
+
+    /* When rendering this page we place the infobox into its own Bootstrap column;
+       ensure the global .infobox float doesn't cause overlap by overriding it here. */
+    .infobox {
+        float: none !important;
+        margin: 0 0 1rem 0 !important;
+        min-width: auto !important;
+        max-width: 100% !important;
     }
 </style>
 
 <div class="container mt-4">
-    @await Html.PartialAsync("_Infobox", Model)
+    <div class="row">
+        <main class="col-md-8">
+            <h2>@Model.Title</h2>
+            <p class="text-muted small">@Model.Year &middot; @Model.Location?.Name</p>
 
-    <h2>@Model.Title</h2>
-    <p class="text-muted small">@Model.Year &middot; @Model.Location?.Name</p>
+            <div class="mb-3">
+                <h3>Description</h3>
+                <p>@Model.Description</p>
+            </div>
 
-    <div class="mb-3">
-        <h3>Description</h3>
-        <p>@Model.Description</p>
-    </div>
+            @{
+                var mediaItems = new List<object>(); // objects will be either MurderEventPhoto or MurderEventVideo
+                if (Model.Photos != null) mediaItems.AddRange(Model.Photos.Cast<object>());
+                if (Model.Videos != null) mediaItems.AddRange(Model.Videos.Cast<object>());
+            }
 
-    @{
-        var mediaItems = new List<object>(); // objects will be either MurderEventPhoto or MurderEventVideo
-        if (Model.Photos != null) mediaItems.AddRange(Model.Photos.Cast<object>());
-        if (Model.Videos != null) mediaItems.AddRange(Model.Videos.Cast<object>());
-    }
-
-    @if (mediaItems.Any())
-    {
-        <div class="mb-4">
-            <h3>Gallery</h3>
-            <div id="eventCarousel" class="carousel slide event-gallery" data-bs-ride="carousel">
-                <div class="carousel-indicators">
-                    @for (int i = 0; i < mediaItems.Count; i++)
-                    {
-                        <button type="button" data-bs-target="#eventCarousel" data-bs-slide-to="@i" class="@(i==0?"active":"")" aria-current="@(i==0?"true":"false")" aria-label="Slide @(i+1)"></button>
-                    }
-                </div>
-                <div class="carousel-inner">
-                    @for (int i = 0; i < mediaItems.Count; i++)
-                    {
-                        var item = mediaItems[i];
-                        <div class="carousel-item @(i==0?"active":"")">
-                            <div class="media-wrap">
-                            @if (item is TheMurderStoneArchive.Models.MurderEventPhoto p)
+            @if (mediaItems.Any())
+            {
+                <div class="mb-4">
+                    <h3>Gallery</h3>
+                    <div id="eventCarousel" class="carousel slide event-gallery" data-bs-ride="carousel">
+                        <div class="carousel-indicators">
+                            @for (int i = 0; i < mediaItems.Count; i++)
                             {
-                                <img src="@Url.Action("Photo", "MurderEvents", new { id = p.Id })" class="d-block" alt="@p.FileName" />
+                                <button type="button" data-bs-target="#eventCarousel" data-bs-slide-to="@i" class="@(i==0?"active":"")" aria-current="@(i==0?"true":"false")" aria-label="Slide @(i+1)"></button>
                             }
-                            else if (item is TheMurderStoneArchive.Models.MurderEventVideo v && !string.IsNullOrEmpty(v.VideoId))
+                        </div>
+                        <div class="carousel-inner">
+                            @for (int i = 0; i < mediaItems.Count; i++)
                             {
-                                <div class="ratio ratio-16x9">
-                                    <iframe src="https://www.youtube.com/embed/@v.VideoId" title="YouTube video player" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                                var item = mediaItems[i];
+                                <div class="carousel-item @(i==0?"active":"")">
+                                    <div class="media-wrap">
+                                    @if (item is TheMurderStoneArchive.Models.MurderEventPhoto p)
+                                    {
+                                        <img src="@Url.Action("Photo", "MurderEvents", new { id = p.Id })" class="d-block" alt="@p.FileName" />
+                                    }
+                                    else if (item is TheMurderStoneArchive.Models.MurderEventVideo v && !string.IsNullOrEmpty(v.VideoId))
+                                    {
+                                        <div class="ratio ratio-16x9">
+                                            <iframe src="https://www.youtube.com/embed/@v.VideoId" title="YouTube video player" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                                        </div>
+                                    }
+                                    </div>
                                 </div>
                             }
-                            </div>
                         </div>
-                    }
+                        @if (mediaItems.Count > 1)
+                        {
+                            <button class="carousel-control-prev" type="button" data-bs-target="#eventCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#eventCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        }
+                    </div>
                 </div>
-                @if (mediaItems.Count > 1)
-                {
-                    <button class="carousel-control-prev" type="button" data-bs-target="#eventCarousel" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#eventCarousel" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
-                }
+            }
+
+            <div class="fact">
+                <strong>Note:</strong> Entries are drawn from historical records and community submissions. Where possible, sources are indicated on each page.
             </div>
-        </div>
-    }
+            @if (!Model.IsApproved)
+            {
+                <div class="alert alert-warning">Note: This entry is user-submitted and pending approval by an administrator.</div>
+            }
+            else
+            {
+                <div class="alert alert-info">User-contributed content — may not be verified.</div>
+            }
 
-    <div class="fact">
-        <strong>Note:</strong> Entries are drawn from historical records and community submissions. Where possible, sources are indicated on each page.
+            @if (User.IsInRole("Admin") || (!string.IsNullOrEmpty(Model.CreatedById) && Model.CreatedById == currentUserId))
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-warning mb-3">Edit</a>
+            }
+            @if (User.IsInRole("Admin") || (!string.IsNullOrEmpty(Model.CreatedById) && Model.CreatedById == currentUserId))
+            {
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-sm btn-danger mb-3">Delete</a>
+            }
+            <a asp-action="Index" class="btn btn-secondary btn-sm mb-3">Back to List</a>
+        </main>
+
+        <aside class="col-md-4">
+            @await Html.PartialAsync("_Infobox", Model)
+        </aside>
     </div>
-    @if (!Model.IsApproved)
-    {
-        <div class="alert alert-warning">Note: This entry is user-submitted and pending approval by an administrator.</div>
-    }
-    else
-    {
-        <div class="alert alert-info">User-contributed content — may not be verified.</div>
-    }
-
-    @* Edit only visible to admins or creator *@
-    @if (User.IsInRole("Admin") || (!string.IsNullOrEmpty(Model.CreatedById) && Model.CreatedById == currentUserId))
-    {
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
-    }
-    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>

@@ -1,7 +1,7 @@
 @model TheMurderStoneArchive.Models.MurderEvent
 
 <aside class="infobox" role="complementary" aria-labelledby="infobox-title">
-    <h3 id="infobox-title" style="font-size:1rem;margin-top:0;margin-bottom:0.5rem;">Summary</h3>
+    <h3 id="infobox-title" class="infobox-title">Summary</h3>
     <dl>
         <dt><strong>Category</strong></dt>
         <dd>@Model.Category</dd>
@@ -24,7 +24,7 @@
     }
     @if (latObj != null && lonObj != null && latObj != 0 && lonObj != 0)
     {
-        <div id="infoboxMap-@Model.Id" class="infobox-map mt-2" style="height:200px;width:100%;max-width:100%;box-sizing:border-box;"></div>
+        <div id="infoboxMap-@Model.Id" class="infobox-map mt-2"></div>
 
         <div class="mt-2 d-flex justify-content-center w-100">
             <a id="directionsBtn-@Model.Id" class="btn btn-outline-primary btn-sm w-100" target="_blank" rel="noopener noreferrer">Get Directions</a>

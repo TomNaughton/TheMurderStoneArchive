@@ -16,7 +16,7 @@
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm modern-navbar mb-3">
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
-                    <img src="~/images/logo.svg" alt="The Murder Stone Archive" style="height:32px;" />
+                    <img src="~/images/logo.svg" alt="The Murder Stone Archive" class="site-logo" />
                     <span class="site-title">The Murder Stone Archive</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,6 +44,10 @@
                                 </svg>
                                 <span>Submit</span>
                             </a>
+                        </li>
+
+                        <li class="nav-item me-2">
+                            <a class="btn btn-outline-theme btn-sm" asp-controller="Home" asp-action="Donate">Donate</a>
                         </li>
 
                         @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
