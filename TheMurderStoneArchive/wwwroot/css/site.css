@@ -59,12 +59,6 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: var(--card-shadow);
 }
 
-@media (max-width: 575.98px) {
-    .main-container {
-        padding: 0;
-    }
-}
-
 /* Modern glassy navbar */
 .modern-navbar {
     background: var(--navbar-bg);
@@ -87,9 +81,9 @@ h1, h2, h3, h4, h5, h6 {
     color: inherit;
 }
 
-@media (max-width: 575.98px) {
+@media (max-width: 323px) {
     .site-title {
-        display: none;
+        font-size: 0.8rem;
     }
 }
 

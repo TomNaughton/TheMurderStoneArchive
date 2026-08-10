@@ -9,12 +9,19 @@
         <dd>@(Model.Year == 0 ? "Unknown" : Model.Year.ToString())</dd>
         <dt><strong>Location</strong></dt>
         <dd>@Model.Location?.Name</dd>
-        <dt><strong>Status</strong></dt>
-        <dd>
-            @if (Model.IsLost) { <span>Lost / Missing</span> }
-            else if (Model.IsProtected) { <span>Protected</span> }
-            else { <span>Recorded</span> }
-        </dd>
+        <dt><strong>Status</strong></dt>        
+        @if (Model.IsLost)
+        {
+            <dd class="alert alert-warning text-center fw-bold"><span>Lost / Missing</span></dd>
+        }
+        else if (Model.IsProtected)
+        {
+            <dd class="alert alert-success text-center fw-bold"><span>Protected</span></dd>
+        }
+        else
+        {
+            <dd class="alert alert-danger text-center fw-bold"><span>Not Protected</span></dd>
+        }
     </dl>
 
     @* Map: show a small Leaflet map with a pin when coordinates are available. Placed inside the aside so width is constrained to the infobox *@

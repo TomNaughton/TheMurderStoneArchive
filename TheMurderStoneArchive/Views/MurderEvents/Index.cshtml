@@ -1,5 +1,5 @@
-﻿@using System.Security.Claims
-@model IEnumerable<TheMurderStoneArchive.Models.MurderEvent>
+@using System.Security.Claims
+@model TheMurderStoneArchive.Models.MurderEventsIndexViewModel
 
 @{
     ViewData["Title"] = "Manage Murder Events";
@@ -17,6 +17,46 @@
                         <small class="text-muted">Now</small>
                         <button type="button" class="btn-close ms-2 mb-1" data-bs-dismiss="toast" aria-label="Close"></button>
                     </div>
+                    <div class="toast-body">@TempData["SubmissionSuccessMessage"]</div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Search and Sort Controls -->
+    <form id="searchForm" onsubmit="return false;" class="mb-4">
+        <div class="row g-2 g-sm-3">
+            <div class="col-12 col-sm-12 col-md-6">
+                <label for="murderEventsSearchTerm" class="form-label">Search</label>
+                <input type="text" class="form-control" id="murderEventsSearchTerm" name="searchTerm" 
+                       placeholder="Search by title or description..." value="@Model.SearchTerm" />
+            </div>
+            <div class="col-12 col-sm-8 col-md-4">
+                <label for="sortOrder" class="form-label">Sort By</label>
+                <select class="form-select" id="sortOrder" name="sortOrder">
+                    <option value="title" selected="@(Model.SortOrder == "title")">Title (A-Z)</option>
+                    <option value="title_desc" selected="@(Model.SortOrder == "title_desc")">Title (Z-A)</option>
+                    <option value="year_desc" selected="@(Model.SortOrder == "year_desc")">Year (Newest)</option>
+                    <option value="year_asc" selected="@(Model.SortOrder == "year_asc")">Year (Oldest)</option>
+                    <option value="location" selected="@(Model.SortOrder == "location")">Location (A-Z)</option>
+                </select>
+            </div>
+            <div class="col-12 col-sm-4 col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="text-center" style="display: none;">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Events Container -->
+    <div id="eventsContainer"></div>
+</div>
 
 @section Scripts {
     <script>
@@ -31,36 +71,191 @@
                     if (body) alert(body.textContent || body.innerText || 'Submission successful');
                 }
             }
-        });
-    </script>
-}
-                    <div class="toast-body">@TempData["SubmissionSuccessMessage"]</div>
-                </div>
-            </div>
-        </div>
-    }
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>All Entries</h1>
-    </div>
 
-    @if (!Model.Any())
-    {
-        <div class="alert alert-light">No results found.</div>
-    }
-    else
-    {
-        <ul class="list-unstyled">
-            @foreach (var item in Model)
-            {
-                if (item.IsApproved || (!string.IsNullOrEmpty(item.CreatedById) && item.CreatedById == currentUserId))
-                {
-                    <li class="mb-3">
-                        <h4><a asp-controller="MurderEvents" asp-action="Details" asp-route-id="@item.Id">@item.Title</a></h4>
-                        <div class="text-muted small">@item.Year &middot; @item.Location?.Name</div>
-                        <p class="mb-0">@(item.Description?.Length > 300 ? item.Description.Substring(0, 300) + "..." : item.Description)</p>
-                    </li>
+            // Load initial events
+            console.log('Loading initial events...');
+            console.log('Model SearchTerm:', '@Model.SearchTerm');
+            console.log('Model SortOrder:', '@Model.SortOrder');
+
+            // Set the sort order select to match the model
+            const sortOrderSelect = document.getElementById('sortOrder');
+            if (sortOrderSelect && '@Model.SortOrder') {
+                sortOrderSelect.value = '@Model.SortOrder';
+                console.log('Set sort order to:', sortOrderSelect.value);
+            }
+
+            // Load events with current state
+            loadEvents();
+
+            // Setup form submission
+            const searchForm = document.getElementById('searchForm');
+            if (searchForm) {
+                searchForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    console.log('Form submitted');
+                    loadEvents(1); // Reset to page 1 when searching
+                });
+            }
+
+            // Setup sort dropdown to trigger load without button click
+            const sortOrder = document.getElementById('sortOrder');
+            if (sortOrder) {
+                sortOrder.addEventListener('change', function () {
+                    console.log('Sort order changed');
+                    loadEvents(1); // Reset to page 1 when sort changes
+                });
+            }
+
+            // Setup search input to trigger search on Enter or when typing (with debounce)
+            const searchInput = document.getElementById('murderEventsSearchTerm');
+            if (searchInput) {
+                let searchTimeout;
+                searchInput.addEventListener('keyup', function () {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        console.log('Search input changed');
+                        loadEvents(1); // Reset to page 1 when search term changes
+                    }, 300); // Debounce for 300ms
+                });
+            }
+        });
+
+        function loadEvents(page = 1) {
+            console.log('=== loadEvents START ===');
+            const searchInput = document.getElementById('murderEventsSearchTerm');
+            const sortOrderSelect = document.getElementById('sortOrder');
+
+            console.log('searchInput element:', searchInput);
+            console.log('sortOrderSelect element:', sortOrderSelect);
+
+            if (!searchInput || !sortOrderSelect) {
+                console.error('Required form elements not found');
+                console.log('searchInput exists:', !!searchInput);
+                console.log('sortOrderSelect exists:', !!sortOrderSelect);
+                return;
+            }
+
+            console.log('searchInput.value (raw):', searchInput.value);
+            console.log('searchInput.value type:', typeof searchInput.value);
+            console.log('searchInput attributes:', {
+                id: searchInput.id,
+                name: searchInput.name,
+                type: searchInput.type,
+                className: searchInput.className
+            });
+
+            const searchTerm = searchInput.value ? searchInput.value.trim() : '';
+            const sortOrder = sortOrderSelect.value;
+            const loading = document.getElementById('loadingIndicator');
+            const container = document.getElementById('eventsContainer');
+
+            console.log('After processing:');
+            console.log('searchTerm:', searchTerm);
+            console.log('searchTerm.length:', searchTerm.length);
+            console.log('sortOrder:', sortOrder);
+            console.log('page:', page);
+
+            // Show loading indicator
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            // Build API URL
+            const params = new URLSearchParams();
+
+            // Always include search term, even if empty (to clear previous searches)
+            params.append('searchTerm', searchTerm);
+            console.log('searchTerm being sent:', searchTerm);
+
+            params.append('sortOrder', sortOrder);
+            params.append('page', page);
+
+            const url = `/MurderEvents/GetEvents?${params.toString()}`;
+            console.log('Final URL:', url);
+            console.log('=== loadEvents END ===');
+
+            fetch(url)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) throw new Error('Network response was not ok: ' + response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Received data:', data);
+                    loading.style.display = 'none';
+                    renderEvents(data);
+                })
+                .catch(error => {
+                    loading.style.display = 'none';
+                    container.innerHTML = '<div class="alert alert-danger">Error loading events. Please try again.<br>' + error.message + '</div>';
+                    console.error('Error:', error);
+                });
+        }
+
+        function renderEvents(viewModel) {
+            const container = document.getElementById('eventsContainer');
+            let html = '';
+
+            console.log('renderEvents called with:', viewModel);
+
+            if (!viewModel.events || viewModel.events.length === 0) {
+                html = '<div class="alert alert-light">No results found.</div>';
+            } else {
+                html = '<ul class="list-unstyled">';
+                viewModel.events.forEach(item => {
+                    const description = item.description && item.description.length > 300 
+                        ? item.description.substring(0, 300) + '...'
+                        : item.description;
+                    html += `
+                        <li class="mb-3">
+                            <h4><a href="/MurderEvents/Details/${item.id}">${item.title}</a></h4>
+                            <div class="text-muted small">${item.year} &middot; ${item.location?.name || 'Unknown'}</div>
+                            <p class="mb-0">${description}</p>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+
+                // Add pagination if needed
+                if (viewModel.totalPages > 1) {
+                    html += renderPagination(viewModel);
                 }
             }
-        </ul>
-    }
-</div>
+
+            container.innerHTML = html;
+        }
+
+        function renderPagination(viewModel) {
+            let html = '<nav aria-label="Page navigation" class="mt-4"><ul class="pagination">';
+
+            // Previous button
+            if (viewModel.hasPreviousPage) {
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="loadEvents(${viewModel.currentPage - 1}); return false;">Previous</a></li>`;
+            } else {
+                html += '<li class="page-item disabled"><span class="page-link">Previous</span></li>';
+            }
+
+            // Page numbers
+            for (let i = 1; i <= viewModel.totalPages; i++) {
+                if (i === viewModel.currentPage) {
+                    html += `<li class="page-item active" aria-current="page"><span class="page-link">${i}<span class="sr-only">(current)</span></span></li>`;
+                } else if (i >= viewModel.currentPage - 2 && i <= viewModel.currentPage + 2) {
+                    html += `<li class="page-item"><a class="page-link" href="#" onclick="loadEvents(${i}); return false;">${i}</a></li>`;
+                }
+            }
+
+            // Next button
+            if (viewModel.hasNextPage) {
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="loadEvents(${viewModel.currentPage + 1}); return false;">Next</a></li>`;
+            } else {
+                html += '<li class="page-item disabled"><span class="page-link">Next</span></li>';
+            }
+
+            html += '</ul></nav>';
+
+            // Add page info
+            html += `<div class="text-muted text-center mt-3">Showing page ${viewModel.currentPage} of ${viewModel.totalPages} (${viewModel.events.length} of ${viewModel.totalEvents} total entries)</div>`;
+
+            return html;
+        }
+    </script>
+}

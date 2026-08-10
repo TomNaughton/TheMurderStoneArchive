@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Reflection.Metadata;
 using Microsoft.AspNetCore.Identity;
 
 namespace TheMurderStoneArchive.Models
@@ -54,6 +53,48 @@ namespace TheMurderStoneArchive.Models
         // Link to the user who created/submitted this event
         // Stored as the Identity user Id (string)
         public string? CreatedById { get; set; }
-        public IdentityUser? CreatedBy { get; set; }
+        public ApplicationUser? CreatedBy { get; set; }
+
+        public ICollection<MurderEventComment> Comments { get; set; } = new List<MurderEventComment>();
+        public ICollection<MurderEventEditSuggestion> EditSuggestions { get; set; } = new List<MurderEventEditSuggestion>();
+        public ICollection<MurderEventChangeLogEntry> ChangeLogEntries { get; set; } = new List<MurderEventChangeLogEntry>();
+
+        // Audit Trail Properties
+        /// <summary>
+        /// UTC timestamp when the record was created.
+        /// </summary>
+        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// UTC timestamp when the record was last modified.
+        /// </summary>
+        public DateTime? ModifiedUtc { get; set; }
+
+        /// <summary>
+        /// User ID of the person who last modified this record.
+        /// </summary>
+        public string? ModifiedById { get; set; }
+        public ApplicationUser? ModifiedBy { get; set; }
+
+        /// <summary>
+        /// UTC timestamp when the record was deleted (soft delete).
+        /// </summary>
+        public DateTime? DeletedUtc { get; set; }
+
+        /// <summary>
+        /// User ID of the person who deleted this record.
+        /// </summary>
+        public string? DeletedById { get; set; }
+        public ApplicationUser? DeletedBy { get; set; }
+
+        /// <summary>
+        /// Indicates whether this record has been soft-deleted.
+        /// </summary>
+        public bool IsDeleted { get; set; } = false;
+
+        /// <summary>
+        /// Reason for the last modification (optional, for audit logging).
+        /// </summary>
+        public string? ModificationReason { get; set; }
     }
 }

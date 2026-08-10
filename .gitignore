@@ -65,3 +65,11 @@ dkms.conf
 /TheMurderStoneArchive/Migrations
 /TheMurderStoneArchive/appsettings.json
 /TheMurderStoneArchive/wwwroot/uploads/murderevents
+/TheMurderStoneArchive/.vs/ProjectEvaluation
+/TheMurderStoneArchive/.env
+/TheMurderStoneArchive/.env.example
+/TheMurderStoneArchive/appsettings.Production.json
+/TheMurderStoneArchive/docker-compose.yml.secure
+/TheMurderStoneArchive/Dockerfile.secure
+/TheMurderStoneArchive.Tests/obj
+/TheMurderStoneArchive.Tests/bin

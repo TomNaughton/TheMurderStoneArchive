@@ -4,18 +4,20 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using TheMurderStoneArchive.Models;
 
 namespace TheMurderStoneArchive.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]
     public class RegisterModel : PageModel
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
         private readonly System.Net.Http.IHttpClientFactory _httpClientFactory;
 
-        public RegisterModel(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, Microsoft.Extensions.Configuration.IConfiguration configuration, System.Net.Http.IHttpClientFactory httpClientFactory)
+        public RegisterModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, Microsoft.Extensions.Configuration.IConfiguration configuration, System.Net.Http.IHttpClientFactory httpClientFactory)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -35,7 +37,13 @@ namespace TheMurderStoneArchive.Areas.Identity.Pages.Account
             public string Email { get; set; }
 
             [Required]
-            [StringLength(100, MinimumLength = 6)]
+            [StringLength(30, MinimumLength = 3)]
+            [RegularExpression("^[a-zA-Z0-9_-]+$", ErrorMessage = "Username may only contain letters, numbers, hyphens and underscores.")]
+            [Display(Name = "Public username")]
+            public string PublicUsername { get; set; }
+
+            [Required]
+            [StringLength(100, MinimumLength = 8)]
             [DataType(DataType.Password)]
             public string Password { get; set; }
 
@@ -61,21 +69,6 @@ namespace TheMurderStoneArchive.Areas.Identity.Pages.Account
             }
             if (!ModelState.IsValid)
             {
-                // Collect ModelState errors so they are visible in the validation summary
-                var allErrors = new System.Text.StringBuilder();
-                foreach (var kv in ModelState)
-                {
-                    foreach (var err in kv.Value.Errors)
-                    {
-                        if (!string.IsNullOrEmpty(err.ErrorMessage)) allErrors.AppendLine(err.ErrorMessage);
-                        else if (err.Exception != null) allErrors.AppendLine(err.Exception.Message);
-                    }
-                }
-                if (allErrors.Length > 0)
-                {
-                    TempData["DebugErrors"] = allErrors.ToString();
-                }
-
                 return Page();
             }
 
@@ -87,16 +80,27 @@ namespace TheMurderStoneArchive.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            var user = new IdentityUser { UserName = Input.Email, Email = Input.Email };
+            var existingUsername = await _userManager.Users.FirstOrDefaultAsync(u => u.PublicUsername == Input.PublicUsername);
+            if (existingUsername != null)
+            {
+                ModelState.AddModelError("Input.PublicUsername", "This username is already taken. Please choose another.");
+                return Page();
+            }
+
+            var user = new ApplicationUser { UserName = Input.Email, Email = Input.Email, PublicUsername = Input.PublicUsername };
             IdentityResult result;
             try
             {
                 result = await _userManager.CreateAsync(user, Input.Password);
             }
-            catch (System.Exception ex)
+            catch (InvalidOperationException)
             {
-                ModelState.AddModelError(string.Empty, "Registration error: " + ex.Message);
-                TempData["DebugErrors"] = ex.ToString();
+                ModelState.AddModelError(string.Empty, "Registration is temporarily unavailable. Please try again later.");
+                return Page();
+            }
+            catch (System.Exception)
+            {
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred during registration. Please try again later.");
                 return Page();
             }
             if (result.Succeeded)
@@ -135,14 +139,13 @@ namespace TheMurderStoneArchive.Areas.Identity.Pages.Account
                 if (!doc.RootElement.TryGetProperty("success", out var success) || !success.GetBoolean())
                     return false;
 
-                double score = 0.0;
+                // Only check score for reCAPTCHA v3 (v2 doesn't return a score)
                 if (doc.RootElement.TryGetProperty("score", out var scoreElem) && scoreElem.ValueKind == System.Text.Json.JsonValueKind.Number)
                 {
-                    score = scoreElem.GetDouble();
+                    double score = scoreElem.GetDouble();
+                    if (score < minScore)
+                        return false;
                 }
-
-                if (score < minScore)
-                    return false;
 
                 if (!string.IsNullOrEmpty(expectedAction))
                 {

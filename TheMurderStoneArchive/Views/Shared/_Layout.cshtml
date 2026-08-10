@@ -30,9 +30,9 @@
                         </li> *@
                     </ul>
 
-                        <form class="d-flex my-2 my-lg-0" role="search" asp-controller="Search" asp-action="Index" method="get">
-                        <label for="q" class="visually-hidden">Search</label>
-                        <input id="q" name="q" class="form-control form-control-sm me-2" type="search" placeholder="Search archive" aria-label="Search the archive" />
+                        <form class="d-flex my-2 my-lg-0" role="search" asp-controller="MurderEvents" asp-action="Index" method="get">
+                        <label for="searchTerm" class="visually-hidden">Search</label>
+                        <input id="searchTerm" name="searchTerm" class="form-control form-control-sm me-2" type="search" placeholder="Search archive" aria-label="Search the archive" />
                         <button class="btn btn-outline-theme btn-sm" type="submit">Search</button>
                     </form>
 
@@ -53,6 +53,7 @@
                         @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
                         {
                             <li class="nav-item me-2"><a class="btn btn-outline-theme btn-sm" asp-controller="MurderEvents" asp-action="Pending">Pending</a></li>
+                            <li class="nav-item me-2"><a class="btn btn-outline-theme btn-sm" asp-controller="MurderEvents" asp-action="PendingSuggestions">Pending Edits</a></li>
                         }
 
                         <partial name="_LoginPartial" />

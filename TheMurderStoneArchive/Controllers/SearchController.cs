@@ -22,12 +22,13 @@ namespace TheMurderStoneArchive.Controllers
 
             var query = q.Trim().ToUpper();
             var results = await _context.MurderEvents
-                .Include(m => m.Location)
-                .Where(m => m.IsApproved && !m.IsLost && (
+                .WithLocation()
+                .ApprovedAndNotLost()
+                .Where(m =>
                     EF.Functions.Like(m.Title.ToUpper(), $"%{query}%") ||
                     EF.Functions.Like(m.Description.ToUpper(), $"%{query}%") ||
                     EF.Functions.Like(m.Location.Name.ToUpper(), $"%{query}%")
-                ))
+                )
                 .OrderByDescending(m => m.Year)
                 .Take(200)
                 .ToListAsync();

@@ -168,14 +168,6 @@
             <div class="fact">
                 <strong>Note:</strong> Entries are drawn from historical records and community submissions. Where possible, sources are indicated on each page.
             </div>
-            @if (!Model.IsApproved)
-            {
-                <div class="alert alert-warning">Note: This entry is user-submitted and pending approval by an administrator.</div>
-            }
-            else
-            {
-                <div class="alert alert-info">User-contributed content — may not be verified.</div>
-            }
 
             @if (User.IsInRole("Admin") || (!string.IsNullOrEmpty(Model.CreatedById) && Model.CreatedById == currentUserId))
             {
@@ -185,7 +177,74 @@
             {
                 <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-sm btn-danger mb-3">Delete</a>
             }
+            @if (User.Identity?.IsAuthenticated == true && !User.IsInRole("Admin") && Model.CreatedById != currentUserId)
+            {
+                <a asp-action="SuggestEdit" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-primary mb-3">Suggest an edit</a>
+            }
+            <a asp-action="ChangeLog" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-secondary mb-3">View changelog</a>
             <a asp-action="Index" class="btn btn-secondary btn-sm mb-3">Back to List</a>
+
+            @{
+                var contributorIds = new List<string>();
+                if (!string.IsNullOrEmpty(Model.CreatedById)) contributorIds.Add(Model.CreatedById);
+                if (Model.ChangeLogEntries != null)
+                {
+                    foreach (var c in Model.ChangeLogEntries)
+                    {
+                        if (!contributorIds.Contains(c.ContributorId)) contributorIds.Add(c.ContributorId);
+                    }
+                }
+            }
+            @if (contributorIds.Any())
+            {
+                <div class="fact mb-3">
+                    <strong>Contributors:</strong>
+                    @string.Join(", ", contributorIds.Select(id => (Model.CreatedById == id ? Model.CreatedBy?.PublicUsername : Model.ChangeLogEntries.FirstOrDefault(c => c.ContributorId == id)?.Contributor?.PublicUsername) ?? "Unknown"))
+                </div>
+            }
+
+            <div class="mb-4">
+                <h3>Comments</h3>
+                @if (TempData["CommentError"] != null)
+                {
+                    <div class="alert alert-danger">@TempData["CommentError"]</div>
+                }
+                @if (Model.Comments != null && Model.Comments.Any())
+                {
+                    <ul class="list-group mb-3">
+                        @foreach (var comment in Model.Comments.OrderByDescending(c => c.CreatedUtc))
+                        {
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <strong>@(comment.User?.PublicUsername ?? "Unknown")</strong>
+                                    <small class="text-muted">@comment.CreatedUtc.ToString("g")</small>
+                                </div>
+                                <p class="mb-0">@comment.Content</p>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted">No comments yet.</p>
+                }
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <form asp-action="AddComment" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="murderEventId" value="@Model.Id" />
+                        <div class="mb-2">
+                            <textarea name="content" class="form-control" rows="3" placeholder="Add a comment..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-primary">Post comment</button>
+                    </form>
+                }
+                else
+                {
+                    <p><a asp-area="Identity" asp-page="/Account/Login">Sign in</a> to add a comment.</p>
+                }
+            </div>
         </main>
 
         <aside class="col-md-4">

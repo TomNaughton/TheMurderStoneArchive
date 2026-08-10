@@ -1,0 +1,33 @@
+@model IEnumerable<TheMurderStoneArchive.Models.MurderEventChangeLogEntry>
+@{
+    var murderEvent = ViewBag.MurderEvent as TheMurderStoneArchive.Models.MurderEvent;
+    ViewData["Title"] = "Changelog";
+}
+
+<div class="container mt-4">
+    <h2>Changelog: @murderEvent?.Title</h2>
+    <p class="text-muted">A public record of approved edits to this entry.</p>
+    <hr />
+    @if (Model.Any())
+    {
+        <ul class="list-group">
+            @foreach (var entry in Model)
+            {
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <strong>@(entry.Contributor?.PublicUsername ?? "Unknown")</strong>
+                        <small class="text-muted">@entry.ChangeUtc.ToString("g")</small>
+                    </div>
+                    <p class="mb-0">@entry.Summary</p>
+                    <small class="text-muted">Approved by @(entry.ApprovedBy?.PublicUsername ?? "Unknown")</small>
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p class="text-muted">No changes recorded yet.</p>
+    }
+
+    <a asp-action="Details" asp-route-id="@murderEvent?.Id" class="btn btn-secondary btn-sm mt-3">Back to Event</a>
+</div>

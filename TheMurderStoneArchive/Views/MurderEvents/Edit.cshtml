@@ -15,44 +15,60 @@
                 <input type="hidden" asp-for="Id" />
 
                 <div class="mb-3">
-                    <label asp-for="Title" class="control-label"></label>
-                    <input asp-for="Title" class="form-control" />
+                    <label asp-for="Title" class="control-label">Stone / Event Title</label>
+                    <input asp-for="Title" class="form-control" placeholder="e.g., The Devil's Punchbowl Stone" />
                     <span asp-validation-for="Title" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Year" class="control-label"></label>
-                    <input asp-for="Year" class="form-control" />
+                    <label asp-for="Category" class="control-label">Category</label>
+                    <select asp-for="Category" class="form-control" asp-items="Html.GetEnumSelectList<TheMurderStoneArchive.Models.StoneCategory>()"></select>
+                    <span asp-validation-for="Category" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Year" class="control-label">Approximate Year</label>
+                    <input asp-for="Year" class="form-control" placeholder="e.g., 1786" />
                     <span asp-validation-for="Year" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Description" class="control-label"></label>
-                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
-                    <span asp-validation-for="Description" class="text-danger"></span>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="Location.Name" class="control-label"></label>
-                    <input asp-for="Location.Name" class="form-control" />
+                    <label asp-for="Location.Name" class="control-label">Location Name / Description</label>
+                    <input asp-for="Location.Name" class="form-control" placeholder="e.g., Near Thursley Common" />
                     <span asp-validation-for="Location.Name" class="text-danger"></span>
                 </div>
-
+                
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="Location.Latitude" class="control-label"></label>
-                        <input asp-for="Location.Latitude" class="form-control" />
+                        <label asp-for="Location.Latitude" class="control-label">Latitude</label>
+                        <input asp-for="Location.Latitude" class="form-control" placeholder="51.1234" />
                         <span asp-validation-for="Location.Latitude" class="text-danger"></span>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label asp-for="Location.Longitude" class="control-label"></label>
-                        <input asp-for="Location.Longitude" class="form-control" />
+                        <label asp-for="Location.Longitude" class="control-label">Longitude</label>
+                        <input asp-for="Location.Longitude" class="form-control" placeholder="-0.7123" />
                         <span asp-validation-for="Location.Longitude" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="control-label">Add Photos (up to 10)</label>
+                    <label asp-for="Description" class="control-label">The Story (Fact or Fiction)</label>
+                    <textarea asp-for="Description" class="form-control" rows="5" placeholder="Describe the history, legend, or local oral tradition..."></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="IsProtected" class="form-check-input" />
+                    <label asp-for="IsProtected" class="form-check-label">Is this a registered Historic England listed monument?</label>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="IsLost" class="form-check-input" />
+                    <label asp-for="IsLost" class="form-check-label">Is this stone currently lost, destroyed, or missing?</label>
+                </div>
+
+                <div class="mb-3">
+                    <label class="control-label">Photos (optional, up to 10)</label>
                     <input type="file" name="Photos" id="photosInput" class="form-control" multiple accept="image/*" />
                     <small class="form-text text-muted">Allowed: JPG, PNG, GIF, WEBP. Max 25 MB per file.</small>
                     <div class="text-danger" id="photosError"></div>

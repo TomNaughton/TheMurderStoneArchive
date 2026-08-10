@@ -30,6 +30,13 @@
             </div>
 
             <div class="mb-3">
+                <label asp-for="Input.PublicUsername" class="form-label">Public username</label>
+                <input asp-for="Input.PublicUsername" class="form-control" type="text" autocomplete="username" />
+                <div class="form-text">Shown publicly on your comments and contributions. Not your email.</div>
+                <span asp-validation-for="Input.PublicUsername" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
                 <label asp-for="Input.Password" class="form-label">Password</label>
                 <input asp-for="Input.Password" class="form-control" type="password" autocomplete="new-password" />
                 <span asp-validation-for="Input.Password" class="text-danger"></span>

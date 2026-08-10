@@ -12,9 +12,9 @@ public class HomeController : Controller
     {
         // Fetch all events including the location for the map markers
         var events = await _context.MurderEvents
-        .Include(m => m.Location)
-        .Where(m => m.IsApproved && !m.IsLost) // Hide unapproved submissions and lost stones from public view
-        .ToListAsync();
+            .WithLocation()
+            .ApprovedAndNotLost()
+            .ToListAsync();
 
         return View(events);
     }
@@ -43,10 +43,11 @@ public class HomeController : Controller
 
     [HttpGet]
     [Route("sitemap.xml")]
+    [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> Sitemap()
     {
         var items = await _context.MurderEvents
-            .Where(m => m.IsApproved && !m.IsLost)
+            .ApprovedAndNotLost()
             .OrderByDescending(m => m.Year)
             .ToListAsync();
 

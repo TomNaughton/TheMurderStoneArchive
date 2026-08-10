@@ -1,0 +1,73 @@
+@model IEnumerable<TheMurderStoneArchive.Models.MurderEventEditSuggestion>
+@{
+    ViewData["Title"] = "Pending Edit Suggestions";
+}
+
+<div class="container mt-4">
+    <h2>Pending Edit Suggestions</h2>
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Submitted By</th>
+                <th>Submitted</th>
+                <th>Proposed Title</th>
+                <th>Proposed Location</th>
+                <th>Photos / Videos</th>
+                <th>Note</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td><a asp-action="Details" asp-route-id="@item.MurderEventId">@item.MurderEvent?.Title</a></td>
+                    <td>@(item.SubmittedBy?.PublicUsername ?? "Unknown")</td>
+                    <td>@item.SubmittedUtc.ToString("g")</td>
+                    <td>@item.ProposedTitle</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(item.ProposedLocationName))
+                        {
+                            <span>@item.ProposedLocationName (@item.ProposedLatitude, @item.ProposedLongitude)</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.ProposedPhotos != null && item.ProposedPhotos.Any())
+                        {
+                            <div class="d-flex flex-wrap gap-1 mb-1">
+                                @foreach (var photo in item.ProposedPhotos)
+                                {
+                                    <img src="@Url.Action("SuggestionPhoto", "MurderEvents", new { id = photo.Id })" style="width:40px;height:40px;object-fit:cover;" />
+                                }
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(item.ProposedDeletedPhotoIds))
+                        {
+                            <div class="text-muted small">Removing photo(s): @item.ProposedDeletedPhotoIds</div>
+                        }
+                        @if (item.ProposedVideos != null && item.ProposedVideos.Any())
+                        {
+                            <div class="small">@item.ProposedVideos.Count() video link(s)</div>
+                        }
+                    </td>
+                    <td>@item.SubmissionNote</td>
+                    <td>
+                        <form asp-action="ApproveSuggestion" asp-route-id="@item.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-success" aria-label="Approve">Approve</button>
+                        </form>
+                        <form asp-action="RejectSuggestion" asp-route-id="@item.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-danger" aria-label="Reject">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No pending suggestions.</p>
+    }
+</div>

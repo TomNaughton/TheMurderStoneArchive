@@ -1,0 +1,207 @@
+@model TheMurderStoneArchive.Models.MurderEventEditSuggestion
+@{
+    var murderEvent = ViewBag.MurderEvent as TheMurderStoneArchive.Models.MurderEvent;
+    ViewData["Title"] = "Suggest an Edit";
+}
+
+<div class="container mt-4">
+    <h2>Suggest an Edit</h2>
+    <p class="text-muted">Suggested edits to "@murderEvent?.Title" are reviewed by an admin before they become visible.</p>
+    <hr />
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="SuggestEdit" asp-route-id="@murderEvent?.Id" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="text-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="ProposedTitle" class="control-label">Stone / Event Title</label>
+                    <input asp-for="ProposedTitle" class="form-control" />
+                    <span asp-validation-for="ProposedTitle" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ProposedCategory" class="control-label">Category</label>
+                    <select asp-for="ProposedCategory" class="form-control" asp-items="Html.GetEnumSelectList<TheMurderStoneArchive.Models.StoneCategory>()"></select>
+                    <span asp-validation-for="ProposedCategory" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ProposedYear" class="control-label">Approximate Year</label>
+                    <input asp-for="ProposedYear" class="form-control" />
+                    <span asp-validation-for="ProposedYear" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ProposedLocationName" class="control-label">Location Name / Description</label>
+                    <input asp-for="ProposedLocationName" class="form-control" placeholder="e.g., Near Thursley Common" />
+                    <span asp-validation-for="ProposedLocationName" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="ProposedLatitude" class="control-label">Latitude</label>
+                        <input asp-for="ProposedLatitude" class="form-control" placeholder="51.1234" />
+                        <span asp-validation-for="ProposedLatitude" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="ProposedLongitude" class="control-label">Longitude</label>
+                        <input asp-for="ProposedLongitude" class="form-control" placeholder="-0.7123" />
+                        <span asp-validation-for="ProposedLongitude" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ProposedDescription" class="control-label">The Story (Fact or Fiction)</label>
+                    <textarea asp-for="ProposedDescription" class="form-control" rows="5"></textarea>
+                    <span asp-validation-for="ProposedDescription" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="ProposedIsProtected" class="form-check-input" />
+                    <label asp-for="ProposedIsProtected" class="form-check-label">Historic England listed landmark</label>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="ProposedIsLost" class="form-check-input" />
+                    <label asp-for="ProposedIsLost" class="form-check-label">Destroyed / missing</label>
+                </div>
+
+                <div class="mb-3">
+                    <label class="control-label">Photos (optional, up to 10)</label>
+                    <input type="file" name="Photos" id="photosInput" class="form-control" multiple accept="image/*" />
+                    <small class="form-text text-muted">Allowed: JPG, PNG, GIF, WEBP. Max 25 MB per file.</small>
+                    <div class="text-danger" id="photosError"></div>
+                    <div id="photoPreviewContainer" class="mt-2 d-flex flex-wrap gap-2"></div>
+                </div>
+
+                @* Existing photos *@
+                @if (murderEvent?.Photos != null && murderEvent.Photos.Any())
+                {
+                    <div class="mb-3">
+                        <label class="control-label">Existing Photos</label>
+                        <div id="existingPhotos" class="d-flex flex-wrap gap-2">
+                            @foreach (var p in murderEvent.Photos)
+                            {
+                                <div class="border p-1 bg-light photo-thumb" data-photo-id="@p.Id">
+                                    <img src="@Url.Action("Photo", "MurderEvents", new { id = p.Id })" class="photo-thumb-img" />
+                                    <button type="button" class="btn btn-sm btn-danger photo-remove-btn">&#10005;</button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="control-label">YouTube video links (optional, up to 3)</label>
+                    <input type="url" name="YouTubeLinks" class="form-control mb-2" value="@(murderEvent?.Videos != null && murderEvent.Videos.ElementAtOrDefault(0) != null ? murderEvent.Videos.ElementAt(0).Url : string.Empty)" placeholder="https://youtube.com/watch?v=..." />
+                    <input type="url" name="YouTubeLinks" class="form-control mb-2" value="@(murderEvent?.Videos != null && murderEvent.Videos.ElementAtOrDefault(1) != null ? murderEvent.Videos.ElementAt(1).Url : string.Empty)" placeholder="https://youtube.com/watch?v=..." />
+                    <input type="url" name="YouTubeLinks" class="form-control" value="@(murderEvent?.Videos != null && murderEvent.Videos.ElementAtOrDefault(2) != null ? murderEvent.Videos.ElementAt(2).Url : string.Empty)" placeholder="https://youtube.com/watch?v=..." />
+                    <small class="form-text text-muted">Provide full YouTube URLs (optional). Leave empty to remove.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="SubmissionNote" class="control-label">Note to reviewer (optional)</label>
+                    <textarea asp-for="SubmissionNote" class="form-control" rows="2" placeholder="Why are you suggesting this change?"></textarea>
+                    <span asp-validation-for="SubmissionNote" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit Suggestion</button>
+                <a asp-action="Details" asp-route-id="@murderEvent?.Id" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function(){
+            const input = document.getElementById('photosInput');
+            const err = document.getElementById('photosError');
+            const preview = document.getElementById('photoPreviewContainer');
+            const existing = document.getElementById('existingPhotos');
+            const MAX_FILES = 10;
+            const MAX_SIZE = 25 * 1024 * 1024; // 25MB
+            const dt = new DataTransfer();
+
+            function createPreviewForFile(file, uid) {
+                const url = URL.createObjectURL(file);
+                const wrapper = document.createElement('div');
+                wrapper.className = 'border p-1 bg-light photo-thumb';
+                wrapper.dataset.uid = uid;
+
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = 'photo-thumb-img';
+                wrapper.appendChild(img);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-sm btn-danger photo-remove-btn';
+                btn.textContent = '\u2715';
+                btn.addEventListener('click', function(){
+                    for (let i = 0; i < dt.items.length; i++) {
+                        if (dt.items[i].getAsFile().name === file.name && dt.items[i].getAsFile().size === file.size) {
+                            dt.items.remove(i);
+                            break;
+                        }
+                    }
+                    input.files = dt.files;
+                    wrapper.remove();
+                    err.textContent = '';
+                });
+                wrapper.appendChild(btn);
+
+                return wrapper;
+            }
+
+            input && input.addEventListener('change', function(){
+                err.textContent = '';
+                const files = Array.from(this.files || []);
+                const existingCount = existing ? existing.querySelectorAll('[data-photo-id]').length : 0;
+                if ((existingCount + dt.files.length + files.length) > MAX_FILES) {
+                    err.textContent = `Total photos cannot exceed ${MAX_FILES}.`;
+                    return;
+                }
+                for (let f of files) {
+                    if (f.size > MAX_SIZE) {
+                        err.textContent = `${f.name} exceeds the ${MAX_SIZE/1024/1024} MB limit.`;
+                        return;
+                    }
+                    if (!f.type.startsWith('image/')) {
+                        err.textContent = `${f.name} is not an image file.`;
+                        return;
+                    }
+                }
+
+                for (let f of files) {
+                    const uid = Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+                    dt.items.add(f);
+                    const node = createPreviewForFile(f, uid);
+                    preview.appendChild(node);
+                }
+                input.files = dt.files;
+            });
+
+            if (existing) {
+                existing.querySelectorAll('[data-photo-id]').forEach(function(el){
+                    const btn = el.querySelector('button');
+                    btn && btn.addEventListener('click', function(){
+                        const id = el.dataset.photoId;
+                        const form = el.closest('form');
+                        if (form) {
+                            const hidden = document.createElement('input');
+                            hidden.type = 'hidden';
+                            hidden.name = 'DeletedPhotoIds';
+                            hidden.value = id;
+                            form.appendChild(hidden);
+                        }
+                        el.remove();
+                        err.textContent = '';
+                    });
+                });
+            }
+        })();
+    </script>
+}
