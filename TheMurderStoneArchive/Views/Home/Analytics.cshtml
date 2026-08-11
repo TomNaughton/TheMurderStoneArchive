@@ -1,0 +1,133 @@
+@model TheMurderStoneArchive.Models.CtaAnalyticsViewModel
+@{
+    ViewData["Title"] = "Analytics";
+}
+
+<div class="mx-auto" style="max-width:1100px;">
+    <div class="card-body">
+        <h1 class="card-title">CTA Analytics Dashboard</h1>
+        <p class="text-muted">Admin-only analytics for support, sponsorship, and product click activity.</p>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Total Clicks</h6>
+                        <p class="display-6 mb-0">@Model.TotalsByCta.Sum(x => x.Clicks)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Unique CTAs</h6>
+                        <p class="display-6 mb-0">@Model.TotalsByCta.Count</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Clicks (Last 30 Days)</h6>
+                        <p class="display-6 mb-0">@Model.DailyTrend.Sum(x => x.Clicks)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <h3 class="h5">Totals by CTA</h3>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>CTA Key</th>
+                                <th class="text-end">Clicks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.TotalsByCta.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="2" class="text-muted">No click events recorded yet.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model.TotalsByCta)
+                                {
+                                    <tr>
+                                        <td><code>@item.CtaKey</code></td>
+                                        <td class="text-end">@item.Clicks</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <h3 class="h5">Daily Trend (Last 30 Days)</h3>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Date (UTC)</th>
+                                <th class="text-end">Clicks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var day in Model.DailyTrend)
+                            {
+                                <tr>
+                                    <td>@day.Date.ToString("yyyy-MM-dd")</td>
+                                    <td class="text-end">@day.Clicks</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <h3 class="h5">Recent Events</h3>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Timestamp (UTC)</th>
+                            <th>CTA Key</th>
+                            <th>Path</th>
+                            <th>Referrer</th>
+                            <th>User</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.RecentEvents.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="5" class="text-muted">No events captured yet.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var ev in Model.RecentEvents)
+                            {
+                                <tr>
+                                    <td>@ev.ClickedAtUtc.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                    <td><code>@ev.CtaKey</code></td>
+                                    <td>@(string.IsNullOrWhiteSpace(ev.Path) ? "-" : ev.Path)</td>
+                                    <td class="text-break">@(string.IsNullOrWhiteSpace(ev.Referrer) ? "-" : ev.Referrer)</td>
+                                    <td>@(string.IsNullOrWhiteSpace(ev.UserId) ? "anonymous" : ev.UserId)</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -139,6 +139,12 @@
                                     @if (item is TheMurderStoneArchive.Models.MurderEventPhoto p)
                                     {
                                         <img src="@Url.Action("Photo", "MurderEvents", new { id = p.Id })" class="d-block" alt="@p.FileName" />
+                                        @if (!string.IsNullOrWhiteSpace(p.Attribution))
+                                        {
+                                            <div class="carousel-caption d-block text-start py-1 px-2" style="background:rgba(0,0,0,0.55);bottom:0;left:0;right:0;border-radius:0 0 0.25rem 0.25rem;">
+                                                <small class="text-white" style="font-size:0.75rem;line-height:1.2">@p.Attribution</small>
+                                            </div>
+                                        }
                                     }
                                     else if (item is TheMurderStoneArchive.Models.MurderEventVideo v && !string.IsNullOrEmpty(v.VideoId))
                                     {

@@ -1,0 +1,102 @@
+@model TheMurderStoneArchive.Models.CampaignAdminViewModel
+@{
+    ViewData["Title"] = "Campaign Admin";
+}
+
+<div class="container">
+    <h1 class="mb-3">Campaign Admin</h1>
+
+    @if (TempData["CampaignSuccess"] is string success)
+    {
+        <div class="alert alert-success">@success</div>
+    }
+
+    @if (TempData["CampaignError"] is string error)
+    {
+        <div class="alert alert-danger">@error</div>
+    }
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <div class="card"><div class="card-body"><div class="small text-muted">Campaign</div><div class="h5 mb-0">@Model.CampaignName</div></div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card"><div class="card-body"><div class="small text-muted">Target</div><div class="h5 mb-0">£@Model.TargetAmountGbp.ToString("0.00")</div></div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card"><div class="card-body"><div class="small text-muted">Raised</div><div class="h5 mb-0">£@Model.RaisedAmountGbp.ToString("0.00")</div></div></div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Add manual contribution</h5>
+            <form asp-controller="Home" asp-action="AddManualContribution" method="post" class="row g-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="CampaignId" />
+
+                <div class="col-md-3">
+                    <label class="form-label" asp-for="ManualContribution.AmountGbp">Amount (£)</label>
+                    <input class="form-control" asp-for="ManualContribution.AmountGbp" type="number" min="0.01" step="0.01" required />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label" asp-for="ManualContribution.Source">Source</label>
+                    <input class="form-control" asp-for="ManualContribution.Source" maxlength="40" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label" asp-for="ManualContribution.ContributorName">Contributor name</label>
+                    <input class="form-control" asp-for="ManualContribution.ContributorName" maxlength="160" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label" asp-for="ManualContribution.ContributorEmail">Contributor email</label>
+                    <input class="form-control" asp-for="ManualContribution.ContributorEmail" maxlength="320" />
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label" asp-for="ManualContribution.Note">Note</label>
+                    <textarea class="form-control" asp-for="ManualContribution.Note" rows="2" maxlength="2000"></textarea>
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" class="btn btn-theme">Add contribution</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Latest contributions</h5>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>Amount</th>
+                            <th>Source</th>
+                            <th>Status</th>
+                            <th>Counted</th>
+                            <th>Contributor</th>
+                            <th>Submitted (UTC)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model.Contributions)
+                        {
+                            <tr>
+                                <td>£@c.AmountGbp.ToString("0.00")</td>
+                                <td>@c.Source</td>
+                                <td>@c.Status</td>
+                                <td>@(c.IsCountedInTotal ? "Yes" : "No")</td>
+                                <td>@(string.IsNullOrWhiteSpace(c.ContributorName) ? "-" : c.ContributorName)</td>
+                                <td>@c.SubmittedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

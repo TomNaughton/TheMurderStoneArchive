@@ -23,6 +23,9 @@ namespace TheMurderStoneArchive.Data
         public DbSet<MurderEventEditSuggestionPhoto> MurderEventEditSuggestionPhotos { get; set; }
         public DbSet<MurderEventEditSuggestionVideo> MurderEventEditSuggestionVideos { get; set; }
         public DbSet<MurderEventChangeLogEntry> MurderEventChangeLogEntries { get; set; }
+        public DbSet<CtaClickEvent> CtaClickEvents { get; set; }
+        public DbSet<DonationCampaign> DonationCampaigns { get; set; }
+        public DbSet<MonetaryContribution> MonetaryContributions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -61,6 +64,98 @@ namespace TheMurderStoneArchive.Data
                 .WithMany(m => m.Comments)
                 .HasForeignKey(c => c.MurderEventId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<CtaClickEvent>()
+                .Property(e => e.CtaKey)
+                .HasMaxLength(120)
+                .IsRequired();
+
+            builder.Entity<CtaClickEvent>()
+                .Property(e => e.Path)
+                .HasMaxLength(300);
+
+            builder.Entity<CtaClickEvent>()
+                .Property(e => e.Referrer)
+                .HasMaxLength(600);
+
+            builder.Entity<CtaClickEvent>()
+                .Property(e => e.UserId)
+                .HasMaxLength(450);
+
+            builder.Entity<CtaClickEvent>()
+                .HasIndex(e => e.ClickedAtUtc);
+
+            builder.Entity<CtaClickEvent>()
+                .HasIndex(e => e.CtaKey);
+
+            builder.Entity<DonationCampaign>()
+                .Property(c => c.Name)
+                .HasMaxLength(140)
+                .IsRequired();
+
+            builder.Entity<DonationCampaign>()
+                .Property(c => c.Slug)
+                .HasMaxLength(80)
+                .IsRequired();
+
+            builder.Entity<DonationCampaign>()
+                .Property(c => c.Description)
+                .HasMaxLength(2500);
+
+            builder.Entity<DonationCampaign>()
+                .HasIndex(c => c.Slug)
+                .IsUnique();
+
+            builder.Entity<MonetaryContribution>()
+                .Property(c => c.Currency)
+                .HasMaxLength(10)
+                .IsRequired();
+
+            builder.Entity<MonetaryContribution>()
+                .Property(c => c.Source)
+                .HasMaxLength(40)
+                .IsRequired();
+
+            builder.Entity<MonetaryContribution>()
+                .Property(c => c.Status)
+                .HasMaxLength(40)
+                .IsRequired();
+
+            builder.Entity<MonetaryContribution>()
+                .Property(c => c.ProviderSessionId)
+                .HasMaxLength(200);
+
+            builder.Entity<MonetaryContribution>()
+                .Property(c => c.ProviderPaymentIntentId)
+                .HasMaxLength(200);
+
+            builder.Entity<MonetaryContribution>()
+                .Property(c => c.ProviderChargeId)
+                .HasMaxLength(200);
+
+            builder.Entity<MonetaryContribution>()
+                .Property(c => c.ContributorName)
+                .HasMaxLength(160);
+
+            builder.Entity<MonetaryContribution>()
+                .Property(c => c.ContributorEmail)
+                .HasMaxLength(320);
+
+            builder.Entity<MonetaryContribution>()
+                .Property(c => c.Note)
+                .HasMaxLength(2000);
+
+            builder.Entity<MonetaryContribution>()
+                .HasIndex(c => c.SubmittedAtUtc);
+
+            builder.Entity<MonetaryContribution>()
+                .HasIndex(c => c.ProviderPaymentIntentId);
+
+            builder.Entity<MonetaryContribution>()
+                .HasOne(c => c.DonationCampaign)
+                .WithMany(c => c.Contributions)
+                .HasForeignKey(c => c.DonationCampaignId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

@@ -22,5 +22,12 @@ namespace TheMurderStoneArchive.Models
         public long FileSize { get; set; }
         // Optional: binary data stored in the database when filesystem storage is not used
         public byte[]? Data { get; set; }
+
+        /// <summary>
+        /// Optional attribution text (author, source, license) required for Creative Commons
+        /// or otherwise non-owned images. Displayed alongside the photo on the Details page.
+        /// </summary>
+        [StringLength(500)]
+        public string? Attribution { get; set; }
     }
 }

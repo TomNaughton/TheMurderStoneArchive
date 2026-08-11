@@ -1,0 +1,33 @@
+@{
+    ViewData["Title"] = "Research Pack";
+}
+
+<div class="mx-auto" style="max-width:760px;">
+    <div class="card-body">
+        <h1 class="card-title">Murder Stone Archive Research Pack</h1>
+        <p class="card-text">This pack contains the in-depth analysis generated from approved archive data, including grouped location intelligence, inferred counties, trend patterns, and verification-oriented supporting tables.</p>
+
+        <div class="alert alert-info" role="status">
+            <strong>Price:</strong> £3.99 (support contribution)
+        </div>
+
+        <h5>What’s included</h5>
+        <ul>
+            <li><strong>Overview PDF:</strong> grouped-location analysis with county context, hotspot tables, and map-style geospatial density grid</li>
+            <li><strong>Timeline PDF:</strong> chronological table of approved records with year and location</li>
+            <li><strong>Analytical Notes PDF:</strong> trend charts from descriptions, recurring-term tables, cluster centroid map insights, and verification workflow</li>
+        </ul>
+
+        <div class="mb-3 d-flex flex-wrap gap-2">
+            <a class="btn btn-theme" asp-controller="Home" asp-action="ResearchPackOverviewPdf" data-cta="researchpack-download-overview">Download Overview PDF</a>
+            <a class="btn btn-outline-theme" asp-controller="Home" asp-action="ResearchPackTimelinePdf" data-cta="researchpack-download-timeline">Download Timeline PDF</a>
+            <a class="btn btn-outline-theme" asp-controller="Home" asp-action="ResearchPackNotesPdf" data-cta="researchpack-download-notes">Download Notes PDF</a>
+        </div>
+
+        <div class="mb-4 d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-theme" asp-controller="Home" asp-action="Campaign" data-cta="researchpack-support-campaign">Support this pack via campaign</a>
+        </div>
+
+        <p class="small text-muted mb-0">If you need support with these files, contact <a href="mailto:contact@themurderstonearchive.com">contact@themurderstonearchive.com</a>.</p>
+    </div>
+</div>

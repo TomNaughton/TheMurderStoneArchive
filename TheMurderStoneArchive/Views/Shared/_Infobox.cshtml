@@ -3,8 +3,6 @@
 <aside class="infobox" role="complementary" aria-labelledby="infobox-title">
     <h3 id="infobox-title" class="infobox-title">Summary</h3>
     <dl>
-        <dt><strong>Category</strong></dt>
-        <dd>@Model.Category</dd>
         <dt><strong>Year</strong></dt>
         <dd>@(Model.Year == 0 ? "Unknown" : Model.Year.ToString())</dd>
         <dt><strong>Location</strong></dt>
@@ -107,4 +105,10 @@
             })();
         </script>
     }
+
+    <hr />
+    <div class="text-center">
+        <p class="small text-muted mb-2">If this archive helped you, please consider supporting its upkeep.</p>
+        <a class="btn btn-theme btn-sm w-100" asp-controller="Home" asp-action="Campaign" data-cta="infobox-support">Support the Archive</a>
+    </div>
 </aside>

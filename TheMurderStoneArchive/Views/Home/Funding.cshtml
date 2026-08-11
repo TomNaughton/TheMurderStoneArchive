@@ -1,0 +1,70 @@
+@model TheMurderStoneArchive.Models.FundingViewModel
+@{
+    ViewData["Title"] = "Funding & Grants";
+}
+
+<div class="mx-auto" style="max-width:860px;">
+    <div class="card-body">
+        <h1 class="card-title">Funding & Grants</h1>
+        <p class="card-text">The Murder Stone Archive is a public educational resource documenting historic memorial stones and associated context. External funding helps preserve access, improve quality, and expand coverage responsibly.</p>
+
+        <div class="alert alert-info" role="status">
+            <strong>Funding focus:</strong> infrastructure reliability, archival-quality curation, and education-focused expansion.
+        </div>
+
+        <h5>Mission</h5>
+        <p>Preserve and present verified information about historic murder stones in a way that supports learning, responsible documentation, and public access to local history.</p>
+
+        <h5>Budget summary</h5>
+        <ul>
+            <li>Hosting, domain, and operational overhead</li>
+            <li>Tooling and maintenance costs</li>
+            <li>Quality assurance and moderation time</li>
+            <li>Research-pack and educational material production</li>
+        </ul>
+
+        <h5>Impact snapshot</h5>
+        <div class="row g-3 mb-3">
+            <div class="col-sm-6 col-lg-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <p class="small text-muted mb-1">Published events</p>
+                        <p class="h4 mb-0">@Model.PublishedEventCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <p class="small text-muted mb-1">Locations catalogued</p>
+                        <p class="h4 mb-0">@Model.LocationCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <p class="small text-muted mb-1">Total CTA clicks</p>
+                        <p class="h4 mb-0">@Model.TotalCtaClicks</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <p class="small text-muted mb-1">Support CTA clicks</p>
+                        <p class="h4 mb-0">@Model.SupportCtaClicks</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h5>Project brief</h5>
+        <p class="mb-2">Download a concise funder-facing brief focused on mission, impact snapshot, funding case, and use-of-funds priorities. In-depth analytical outputs are provided in the separate Research Pack.</p>
+        <a class="btn btn-outline-theme mb-3" asp-controller="Home" asp-action="ProjectBriefPdf" data-cta="funding-brief-download">Download project brief (PDF)</a>
+
+        <h5>Support or funding enquiry</h5>
+        <p class="mb-2">For grants, institutional support, or partnership discussion:</p>
+        <a class="btn btn-theme" href="mailto:contact@themurderstonearchive.com?subject=Funding%20enquiry%20-%20The%20Murder%20Stone%20Archive" data-cta="funding-contact-email">Contact for funding enquiries</a>
+    </div>
+</div>

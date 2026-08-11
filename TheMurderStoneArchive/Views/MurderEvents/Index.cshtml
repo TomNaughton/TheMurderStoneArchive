@@ -202,8 +202,8 @@
             } else {
                 html = '<ul class="list-unstyled">';
                 viewModel.events.forEach(item => {
-                    const description = item.description && item.description.length > 300 
-                        ? item.description.substring(0, 300) + '...'
+                    const description = item.description && item.description.length > 150 
+                        ? item.description.substring(0, 150) + '...'
                         : item.description;
                     html += `
                         <li class="mb-3">

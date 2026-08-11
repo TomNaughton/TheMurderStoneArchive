@@ -71,6 +71,7 @@
                     <label class="control-label">Photos (optional, up to 10)</label>
                     <input type="file" name="Photos" id="photosInput" class="form-control" multiple accept="image/*" />
                     <small class="form-text text-muted">Allowed: JPG, PNG, GIF, WEBP. Max 25 MB per file.</small>
+                    <small class="form-text text-muted">If a photo isn't your own work (e.g. Creative Commons licensed), enter its required attribution (author, license, source link) below the thumbnail.</small>
                     <div class="text-danger" id="photosError"></div>
                     <div id="photoPreviewContainer" class="mt-2 d-flex flex-wrap gap-2"></div>
                 </div>
@@ -112,12 +113,16 @@
             const MAX_FILES = 10;
             const MAX_SIZE = 25 * 1024 * 1024; // 25MB
             const dt = new DataTransfer();
+            // Expose to window so the reCAPTCHA handler (a separate script block) can
+            // re-apply the managed file list just before form.submit().
+            window._photosDt = dt;
+            window._photosInput = input;
 
             function createPreviewForFile(file, uid) {
                 const url = URL.createObjectURL(file);
                 const wrapper = document.createElement('div');
                 wrapper.className = 'border p-1 bg-light';
-                wrapper.style.width = '120px';
+                wrapper.style.width = '150px';
                 wrapper.style.position = 'relative';
                 wrapper.dataset.uid = uid;
 
@@ -127,6 +132,13 @@
                 img.style.height = '80px';
                 img.style.objectFit = 'cover';
                 wrapper.appendChild(img);
+
+                const attribution = document.createElement('input');
+                attribution.type = 'text';
+                attribution.name = 'PhotoAttributions';
+                attribution.className = 'form-control form-control-sm mt-1';
+                attribution.placeholder = 'Attribution (if not your own work)';
+                wrapper.appendChild(attribution);
 
                 const btn = document.createElement('button');
                 btn.type = 'button';
@@ -194,6 +206,11 @@
                         var el = document.getElementById('g-recaptcha-response');
                         if (!el) { el = document.createElement('input'); el.type='hidden'; el.name='g-recaptcha-response'; el.id='g-recaptcha-response'; form.appendChild(el); }
                         el.value = token;
+                        // Re-apply the DataTransfer file list immediately before submission to
+                        // ensure the browser serialises all managed files in the POST body.
+                        if (window._photosDt && window._photosInput) {
+                            window._photosInput.files = window._photosDt.files;
+                        }
                         form.submit();
                     });
                 });

@@ -73,3 +73,5 @@ dkms.conf
 /TheMurderStoneArchive/Dockerfile.secure
 /TheMurderStoneArchive.Tests/obj
 /TheMurderStoneArchive.Tests/bin
+/.github
+/TheMurderStoneArchive/.env.local

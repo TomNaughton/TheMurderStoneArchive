@@ -26,5 +26,12 @@ namespace TheMurderStoneArchive.Models
         public long FileSize { get; set; }
 
         public byte[]? Data { get; set; }
+
+        /// <summary>
+        /// Optional attribution text (author, source, license) required for Creative Commons
+        /// or otherwise non-owned images. Copied into MurderEventPhoto.Attribution on approval.
+        /// </summary>
+        [StringLength(500)]
+        public string? Attribution { get; set; }
     }
 }

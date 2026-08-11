@@ -50,5 +50,11 @@ namespace TheMurderStoneArchive.Helpers
 
         // HTTP
         public const string DefaultHttpClientName = "default";
+
+        // Stripe
+        public const string StripeSection = "Stripe";
+
+        // Donations
+        public const string DonationSection = "Donation";
     }
 }

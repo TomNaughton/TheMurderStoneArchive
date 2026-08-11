@@ -47,13 +47,16 @@
                         </li>
 
                         <li class="nav-item me-2">
-                            <a class="btn btn-outline-theme btn-sm" asp-controller="Home" asp-action="Donate">Donate</a>
+                            <a class="btn btn-theme btn-sm" asp-controller="Home" asp-action="Campaign" data-cta="nav-campaign">Campaign</a>
+                        </li>
+                        <li class="nav-item me-2">
+                            <a class="btn btn-outline-theme btn-sm" asp-controller="Home" asp-action="ResearchPack" data-cta="nav-researchpack">Research Pack</a>
                         </li>
 
                         @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
                         {
+                            <li class="nav-item me-2"><a class="btn btn-outline-theme btn-sm" asp-controller="Home" asp-action="Analytics">Analytics</a></li>
                             <li class="nav-item me-2"><a class="btn btn-outline-theme btn-sm" asp-controller="MurderEvents" asp-action="Pending">Pending</a></li>
-                            <li class="nav-item me-2"><a class="btn btn-outline-theme btn-sm" asp-controller="MurderEvents" asp-action="PendingSuggestions">Pending Edits</a></li>
                         }
 
                         <partial name="_LoginPartial" />
@@ -69,13 +72,16 @@
     </div>
 
     <footer class="footer bg-dark text-light py-4 mt-5">
-        <div class="container text-center small d-flex flex-column flex-md-row justify-content-between align-items-center">
-            <div>&copy; 2026 - The Murder Stone Archive</div>
-            <div class="mt-2 mt-md-0">
-                <a asp-controller="Home" asp-action="Privacy" class="text-light me-3">Privacy</a>
-                <a asp-controller="Home" asp-action="Terms" class="text-light me-3">Terms</a>
+        <div class="container text-center small d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 gap-md-0">
+            <div class="d-flex flex-column flex-md-row gap-3 w-100 w-md-auto justify-content-md-start">
+                <a asp-controller="Home" asp-action="Campaign" class="text-light" data-cta="footer-campaign">Support the Archive</a>
+                <a asp-controller="Home" asp-action="ResearchPack" class="text-light" data-cta="footer-researchpack">Research Pack</a>
+                <a asp-controller="Home" asp-action="Funding" class="text-light" data-cta="footer-funding">Funding</a>
+                <a asp-controller="Home" asp-action="Privacy" class="text-light">Privacy</a>
+                <a asp-controller="Home" asp-action="Terms" class="text-light">Terms</a>
                 <a asp-controller="Home" asp-action="DMCA" class="text-light">DMCA</a>
             </div>
+            <div>&copy; 2026 - The Murder Stone Archive</div>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

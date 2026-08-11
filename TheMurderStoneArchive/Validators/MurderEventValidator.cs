@@ -16,13 +16,22 @@ namespace TheMurderStoneArchive.Validators
                 .MinimumLength(10).WithMessage("Description must be at least 10 characters.");
 
             RuleFor(x => x.Year)
-                .GreaterThanOrEqualTo(1400)
-                .WithMessage("Year must be 1400 or later.")
                 .LessThanOrEqualTo(DateTime.UtcNow.Year)
                 .WithMessage($"Year cannot be in the future (current year: {DateTime.UtcNow.Year}).");
 
             RuleFor(x => x.LocationId)
-                .GreaterThan(0).WithMessage("A valid location must be selected.");
+                .GreaterThan(0)
+                .When(x => x.Location == null)
+                .WithMessage("A valid location must be selected.");
+
+            RuleFor(x => x.Location)
+                .NotNull()
+                .When(x => x.LocationId <= 0)
+                .WithMessage("A location must be provided.");
+
+            RuleFor(x => x.Location!.Name)
+                .NotEmpty().WithMessage("Location name is required.")
+                .When(x => x.Location != null);
 
             RuleFor(x => x.Category)
                 .IsInEnum().WithMessage("Category must be a valid stone category.");

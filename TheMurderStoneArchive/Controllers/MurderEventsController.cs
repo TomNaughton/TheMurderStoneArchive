@@ -158,7 +158,7 @@ namespace TheMurderStoneArchive.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<IActionResult> Edit(int id, MurderEvent murderEvent, List<IFormFile>? Photos, List<string>? YouTubeLinks, List<int>? DeletedPhotoIds)
+        public async Task<IActionResult> Edit(int id, MurderEvent murderEvent, List<IFormFile>? Photos, List<string>? PhotoAttributions, List<string>? YouTubeLinks, List<int>? DeletedPhotoIds, Dictionary<string, string>? ExistingPhotoAttributions)
         {
             if (id != murderEvent.Id) return NotFound();
 
@@ -200,13 +200,32 @@ namespace TheMurderStoneArchive.Controllers
                         _context.MurderEventPhotos.RemoveRange(toDelete);
                     }
 
+                    // Update attribution text on existing photos that weren't deleted
+                    if (ExistingPhotoAttributions != null && ExistingPhotoAttributions.Count > 0)
+                    {
+                        // Keys arrive as strings from the form ("ExistingPhotoAttributions[5]=text")
+                        var parsedAttributions = ExistingPhotoAttributions
+                            .Where(kv => int.TryParse(kv.Key, out _))
+                            .ToDictionary(kv => int.Parse(kv.Key), kv => kv.Value);
+
+                        var existingPhotos = await _context.MurderEventPhotos
+                            .Where(p => p.MurderEventId == id && parsedAttributions.Keys.Contains(p.Id))
+                            .ToListAsync();
+                        foreach (var photo in existingPhotos)
+                        {
+                            if (parsedAttributions.TryGetValue(photo.Id, out var attribution))
+                                photo.Attribution = string.IsNullOrWhiteSpace(attribution) ? null : attribution.Trim();
+                        }
+                    }
+
                     _context.Update(murderEvent);
 
                     // Add new photos
                     if (Photos != null && Photos.Count > 0)
                     {
-                        foreach (var file in Photos)
+                        for (int i = 0; i < Photos.Count; i++)
                         {
+                            var file = Photos[i];
                             if (file.Length == 0) continue;
 
                             using var ms = new MemoryStream();
@@ -220,7 +239,10 @@ namespace TheMurderStoneArchive.Controllers
                                 FilePath = string.Empty,
                                 ContentType = file.ContentType,
                                 FileSize = file.Length,
-                                Data = bytes
+                                Data = bytes,
+                                Attribution = PhotoAttributions != null && i < PhotoAttributions.Count && !string.IsNullOrWhiteSpace(PhotoAttributions[i])
+                                    ? PhotoAttributions[i].Trim()
+                                    : null
                             });
                         }
                     }
@@ -299,7 +321,7 @@ namespace TheMurderStoneArchive.Controllers
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Submit(MurderEvent murderEvent, List<IFormFile>? Photos, List<string>? YouTubeLinks)
+        public async Task<IActionResult> Submit(MurderEvent murderEvent, List<IFormFile>? Photos, List<string>? PhotoAttributions, List<string>? YouTubeLinks)
         {
             // Verify reCAPTCHA v3 token (action: submit)
             var token = Request.Form["g-recaptcha-response"].ToString();
@@ -331,8 +353,9 @@ namespace TheMurderStoneArchive.Controllers
 
                 if (Photos != null && Photos.Count > 0)
                 {
-                    foreach (var file in Photos)
+                    for (int i = 0; i < Photos.Count; i++)
                     {
+                        var file = Photos[i];
                         if (file.Length == 0) continue;
                         if (file.Length > MaxFileSize)
                         {
@@ -365,7 +388,10 @@ namespace TheMurderStoneArchive.Controllers
                             FilePath = string.Empty,
                             ContentType = file.ContentType,
                             FileSize = file.Length,
-                            Data = bytes
+                            Data = bytes,
+                            Attribution = PhotoAttributions != null && i < PhotoAttributions.Count && !string.IsNullOrWhiteSpace(PhotoAttributions[i])
+                                ? PhotoAttributions[i].Trim()
+                                : null
                         });
                     }
                     await _context.SaveChangesAsync();
@@ -507,7 +533,7 @@ namespace TheMurderStoneArchive.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<IActionResult> SuggestEdit(int id, MurderEventEditSuggestion suggestion, List<IFormFile>? Photos, List<string>? YouTubeLinks, List<int>? DeletedPhotoIds)
+        public async Task<IActionResult> SuggestEdit(int id, MurderEventEditSuggestion suggestion, List<IFormFile>? Photos, List<string>? PhotoAttributions, List<string>? YouTubeLinks, List<int>? DeletedPhotoIds)
         {
             var murderEvent = await _context.MurderEvents
                 .Include(m => m.Location)
@@ -561,8 +587,9 @@ namespace TheMurderStoneArchive.Controllers
 
             if (Photos != null && Photos.Count > 0)
             {
-                foreach (var file in Photos)
+                for (int i = 0; i < Photos.Count; i++)
                 {
+                    var file = Photos[i];
                     if (file.Length == 0) continue;
 
                     using var ms = new MemoryStream();
@@ -574,7 +601,10 @@ namespace TheMurderStoneArchive.Controllers
                         FileName = file.FileName,
                         ContentType = file.ContentType,
                         FileSize = file.Length,
-                        Data = bytes
+                        Data = bytes,
+                        Attribution = PhotoAttributions != null && i < PhotoAttributions.Count && !string.IsNullOrWhiteSpace(PhotoAttributions[i])
+                            ? PhotoAttributions[i].Trim()
+                            : null
                     });
                 }
             }
@@ -709,7 +739,8 @@ namespace TheMurderStoneArchive.Controllers
                         FilePath = string.Empty,
                         ContentType = proposedPhoto.ContentType,
                         FileSize = proposedPhoto.FileSize,
-                        Data = proposedPhoto.Data
+                        Data = proposedPhoto.Data,
+                        Attribution = proposedPhoto.Attribution
                     });
                 }
                 changes.Add($"{suggestion.ProposedPhotos.Count} photo(s) added");

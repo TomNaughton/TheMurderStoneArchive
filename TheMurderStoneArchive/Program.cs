@@ -11,9 +11,19 @@ using TheMurderStoneArchive.Models;
 using TheMurderStoneArchive.Services;
 using TheMurderStoneArchive.Validators;
 
-// Load .env file into environment variables
-var envPath = Path.Combine(AppContext.BaseDirectory, ".env");
-if (File.Exists(envPath))
+var builder = WebApplication.CreateBuilder(args);
+
+// Load .env file into environment variables.
+// In Development, prefer .env.local but fall back to .env.
+var envCandidates = builder.Environment.IsDevelopment()
+    ? new[] { ".env.local", ".env" }
+    : new[] { ".env" };
+
+var envPath = envCandidates
+    .Select(file => Path.Combine(builder.Environment.ContentRootPath, file))
+    .FirstOrDefault(File.Exists);
+
+if (!string.IsNullOrWhiteSpace(envPath))
 {
     foreach (var line in File.ReadLines(envPath))
     {
@@ -27,8 +37,6 @@ if (File.Exists(envPath))
         }
     }
 }
-
-var builder = WebApplication.CreateBuilder(args);
 
 // Load secrets from environment variables
 // IMPORTANT: In production, set these environment variables:
@@ -77,9 +85,16 @@ builder.Services.AddControllersWithViews()
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
 builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
+builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection(AppConstants.StripeSection));
+builder.Services.Configure<DonationOptions>(builder.Configuration.GetSection(AppConstants.DonationSection));
 
 // Register application services
 builder.Services.AddScoped<IMurderEventService, MurderEventService>();
+builder.Services.AddScoped<IPdfDocumentService, PdfDocumentService>();
+builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
+builder.Services.AddScoped<IPatreonWebhookService, PatreonWebhookService>();
+builder.Services.AddScoped<IFourthwallWebhookService, FourthwallWebhookService>();
 
 // Register FluentValidation
 builder.Services.AddFluentValidationAutoValidation()
@@ -112,6 +127,63 @@ var reCaptchaSecret = builder.Configuration[AppConstants.ReCaptchaSecretKeyKey];
 if (string.IsNullOrEmpty(reCaptchaSecret))
 {
     logger.LogWarning("ReCaptcha secret key is missing. Set ReCaptcha__SecretKey environment variable.");
+}
+
+var stripeSecretKey = builder.Configuration[$"{AppConstants.StripeSection}:SecretKey"];
+if (string.IsNullOrEmpty(stripeSecretKey))
+{
+    logger.LogWarning("Stripe secret key is missing. Set Stripe__SecretKey environment variable.");
+}
+
+var stripePublishableKey = builder.Configuration[$"{AppConstants.StripeSection}:PublishableKey"];
+if (string.IsNullOrEmpty(stripePublishableKey))
+{
+    logger.LogWarning("Stripe publishable key is missing. Set Stripe__PublishableKey environment variable.");
+}
+
+var stripeWebhookSecret = builder.Configuration[$"{AppConstants.StripeSection}:WebhookSecret"];
+if (string.IsNullOrEmpty(stripeWebhookSecret))
+{
+    logger.LogWarning("Stripe webhook secret is missing. Set Stripe__WebhookSecret environment variable.");
+}
+
+var stripeProductTaxCode = builder.Configuration[$"{AppConstants.StripeSection}:ProductTaxCode"];
+if (string.IsNullOrEmpty(stripeProductTaxCode))
+{
+    logger.LogWarning("Stripe product tax code is missing. Set Stripe__ProductTaxCode environment variable.");
+}
+
+var donationProvider = builder.Configuration[$"{AppConstants.DonationSection}:Provider"];
+var patreonWebhookSecret = builder.Configuration[$"{AppConstants.DonationSection}:PatreonWebhookSecret"];
+var patreonCampaignUrl = builder.Configuration[$"{AppConstants.DonationSection}:PatreonCampaignUrl"];
+var patreonOneTimePaymentUrl = builder.Configuration[$"{AppConstants.DonationSection}:PatreonOneTimePaymentUrl"];
+var fourthwallOneTimePaymentUrl = builder.Configuration[$"{AppConstants.DonationSection}:FourthwallOneTimePaymentUrl"];
+var fourthwallWebhookSecret = builder.Configuration[$"{AppConstants.DonationSection}:FourthwallWebhookSecret"];
+
+if (string.Equals(donationProvider, "Patreon", StringComparison.OrdinalIgnoreCase))
+{
+    if (string.IsNullOrWhiteSpace(patreonOneTimePaymentUrl) && string.IsNullOrWhiteSpace(patreonCampaignUrl))
+    {
+        logger.LogWarning("Patreon donation provider is enabled but no Patreon donation URL is configured. Set Donation__PatreonOneTimePaymentUrl (preferred) or Donation__PatreonCampaignUrl.");
+    }
+
+    if (string.IsNullOrWhiteSpace(patreonWebhookSecret))
+    {
+        logger.LogWarning("Patreon donation provider is enabled but webhook secret is missing. Set Donation__PatreonWebhookSecret environment variable.");
+    }
+}
+
+if (string.Equals(donationProvider, "Fourthwall", StringComparison.OrdinalIgnoreCase))
+{
+    if (string.IsNullOrWhiteSpace(fourthwallOneTimePaymentUrl))
+    {
+        logger.LogWarning("Fourthwall donation provider is enabled but one-time payment URL is missing. Set Donation__FourthwallOneTimePaymentUrl environment variable.");
+    }
+
+    if (string.IsNullOrWhiteSpace(fourthwallWebhookSecret))
+    {
+        logger.LogWarning("Fourthwall donation provider is enabled but webhook secret is missing. Set Donation__FourthwallWebhookSecret environment variable.");
+    }
 }
 
 using (var scope = app.Services.CreateScope())

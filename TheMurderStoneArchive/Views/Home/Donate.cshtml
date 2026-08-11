@@ -1,19 +1,49 @@
 @{
     ViewData["Title"] = "Donate";
+    var usePatreon = ViewBag.UsePatreon is bool isPatreon && isPatreon;
+    var patreonCampaignUrl = ViewBag.PatreonCampaignUrl as string;
+    var useFourthwall = ViewBag.UseFourthwall is bool isFourthwall && isFourthwall;
+    var fourthwallOneTimePaymentUrl = ViewBag.FourthwallOneTimePaymentUrl as string;
 }
 
 <div class="mx-auto" style="max-width:760px;">
     <div class="card-body">
         <h1 class="card-title">Support The Murder Stone Archive</h1>
-        <p class="card-text">Thanks for considering a donation — I host and maintain this site, plus I pay for the domain myself, so any amount will help keep this website alive.</p>
+        <p class="card-text">Support the archive through the tracked campaign flow. Contributions are recorded in-app so progress and totals are visible publicly.</p>
 
-        <div class="mb-4">
-            <a class="btn btn-primary text-white" href="https://ko-fi.com/tomnaughton" target="_blank" rel="noopener">Donate (thank you!)</a>
+        <div class="alert alert-info" role="status">
+            <strong>Payment methods:</strong> This site can point to Stripe Checkout or Patreon based on environment configuration.
+        </div>
+
+        <div class="mb-4 d-flex flex-wrap gap-2">
+            @if (usePatreon && !string.IsNullOrWhiteSpace(patreonCampaignUrl))
+            {
+                <a class="btn btn-primary text-white" href="@patreonCampaignUrl" rel="noopener noreferrer" data-cta="donate-patreon-main">Make one-time payment on Patreon</a>
+            }
+            else if (useFourthwall && !string.IsNullOrWhiteSpace(fourthwallOneTimePaymentUrl))
+            {
+                <a class="btn btn-primary text-white" href="@fourthwallOneTimePaymentUrl" rel="noopener noreferrer" data-cta="donate-fourthwall-main">Make one-time payment on Fourthwall</a>
+            }
+            else
+            {
+                <a class="btn btn-primary text-white" asp-controller="Home" asp-action="Campaign" data-cta="donate-campaign-main">Go to campaign</a>
+            }
+            <a class="btn btn-outline-theme" asp-controller="Home" asp-action="ResearchPack" data-cta="donate-researchpack-page">View Research Pack</a>
+            <a class="btn btn-outline-theme" asp-controller="Home" asp-action="Funding" data-cta="donate-funding-page">View Funding Page</a>
         </div>
 
         <div class="mb-4">
-            <h5>Other options</h5>
-            <p>If you'd rather donate via crypto or open a conversation about supporting the site, feel free to contact me: <a href="mailto:contact@themurderstonearchive.com">contact@themurderstonearchive.com</a></p>
+            <h5>Why this is different now</h5>
+            <ul class="mb-0">
+                <li>All submitted contributions are tracked immediately in campaign totals.</li>
+                <li>Public campaign page shows progress and recent recorded contributions.</li>
+                <li>Admin management supports manual entries for non-automated channels.</li>
+            </ul>
+        </div>
+
+        <div class="mb-4">
+            <h5>Need another support route?</h5>
+            <p class="mb-0">For institutional support, grants, or other payment arrangements, contact <a href="mailto:contact@themurderstonearchive.com">contact@themurderstonearchive.com</a>.</p>
         </div>
     </div>
 </div>
