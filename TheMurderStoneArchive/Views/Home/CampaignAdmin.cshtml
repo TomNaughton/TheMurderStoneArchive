@@ -17,14 +17,26 @@
     }
 
     <div class="row g-3 mb-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card"><div class="card-body"><div class="small text-muted">Campaign</div><div class="h5 mb-0">@Model.CampaignName</div></div></div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card"><div class="card-body"><div class="small text-muted">Target</div><div class="h5 mb-0">£@Model.TargetAmountGbp.ToString("0.00")</div></div></div>
         </div>
-        <div class="col-md-4">
-            <div class="card"><div class="card-body"><div class="small text-muted">Raised</div><div class="h5 mb-0">£@Model.RaisedAmountGbp.ToString("0.00")</div></div></div>
+        <div class="col-md-3">
+            <div class="card"><div class="card-body"><div class="small text-muted">Donations raised</div><div class="h5 mb-0">£@Model.RaisedAmountGbp.ToString("0.00")</div></div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card"><div class="card-body"><div class="small text-muted">Subscriptions accrued</div><div class="h5 mb-0">£@Model.SubscriptionTotalAmountGbp.ToString("0.00")</div></div></div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-success"><div class="card-body"><div class="small text-muted">Grand total (all sources)</div><div class="h5 mb-0 text-success">£@Model.GrandTotalAmountGbp.ToString("0.00")</div></div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card"><div class="card-body"><div class="small text-muted">Active subscriptions</div><div class="h5 mb-0">@Model.Subscriptions.Count(s => s.IsActive)</div></div></div>
         </div>
     </div>
 
@@ -67,9 +79,64 @@
         </div>
     </div>
 
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">API subscriptions</h5>
+            @if (!Model.Subscriptions.Any())
+            {
+                <p class="text-muted mb-0">No subscriptions yet.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Started (UTC)</th>
+                                <th>Expires (UTC)</th>
+                                <th>£/month</th>
+                                <th>Months</th>
+                                <th>Accrued</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in Model.Subscriptions)
+                            {
+                                <tr>
+                                    <td>@(s.ContributorEmail ?? "-")</td>
+                                    <td>
+                                        @if (s.CancelledAtUtc.HasValue)
+                                        {
+                                            <span class="badge bg-secondary">Cancelled @s.CancelledAtUtc.Value.ToString("yyyy-MM-dd")</span>
+                                        }
+                                        else if (s.IsActive)
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">Lapsed</span>
+                                        }
+                                    </td>
+                                    <td><small>@s.StartedAtUtc.ToString("yyyy-MM-dd")</small></td>
+                                    <td><small>@(s.ExpiresAtUtc?.ToString("yyyy-MM-dd") ?? "-")</small></td>
+                                    <td>£@s.MonthlyAmountGbp.ToString("0.00")</td>
+                                    <td>@s.MonthsElapsed</td>
+                                    <td>£@s.TotalAmountGbp.ToString("0.00")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">Latest contributions</h5>
+            <h5 class="card-title">Latest one-off contributions</h5>
             <div class="table-responsive">
                 <table class="table table-sm align-middle">
                     <thead>

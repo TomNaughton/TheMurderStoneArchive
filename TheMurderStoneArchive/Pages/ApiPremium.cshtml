@@ -1,0 +1,199 @@
+@page "/api-premium"
+@using TheMurderStoneArchive.Models
+@inject Microsoft.Extensions.Options.IOptions<DonationOptions> DonationOptions
+@{
+    ViewData["Title"] = "API Premium Subscription";
+    var options = DonationOptions.Value;
+}
+
+<div class="container mt-5">
+    <h1>Upgrade to API Premium</h1>
+    <p class="lead">Get unlimited access to our full event database and analysis tools.</p>
+
+    <div class="row mt-5">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">What's Included?</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6>10,000 Requests/Month</h6>
+                                <small class="text-muted">100x the free tier</small>
+                            </div>
+                            <span class="badge bg-success">✓</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6>Full Event Details</h6>
+                                <small class="text-muted">Perpetrator info, monuments, descriptions</small>
+                            </div>
+                            <span class="badge bg-success">✓</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6>Analysis Endpoints</h6>
+                                <small class="text-muted">Location clusters, temporal trends, county insights</small>
+                            </div>
+                            <span class="badge bg-success">✓</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6>Priority Support</h6>
+                                <small class="text-muted">Help with API integration and data requests</small>
+                            </div>
+                            <span class="badge bg-success">✓</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">How It Works</h4>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li class="mb-3">
+                            <strong>Purchase via Fourthwall:</strong> Choose your subscription period and complete checkout through our secure Fourthwall store.
+                        </li>
+                        <li class="mb-3">
+                            <strong>Automatic Upgrade:</strong> We'll receive confirmation and automatically upgrade your API key to Premium tier.
+                        </li>
+                        <li class="mb-3">
+                            <strong>Immediate Access:</strong> Start using premium endpoints right away—no delay.
+                        </li>
+                        <li>
+                            <strong>Manage Anytime:</strong> View your subscription status and API keys in your account dashboard.
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="alert alert-info" role="alert">
+                <h5>Already have a free API key?</h5>
+                <p class="mb-0">Once you purchase a Premium subscription below, we'll automatically upgrade your existing API key. No need to generate a new one.</p>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-success sticky-top" style="top: 1rem;">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Premium Subscriptions</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h3 class="text-success">$4.99<span class="h6">/month</span></h3>
+                        <small class="text-muted">Cancel anytime • Or save with annual billing</small>
+                    </div>
+
+                    @* Fourthwall subscription embed would go here *@
+                    <div id="fourthwall-subscription" class="text-center">
+                        @if (!string.IsNullOrWhiteSpace(options.FourthwallSubscriptionUrl))
+                        {
+                            <a href="@options.FourthwallSubscriptionUrl" class="btn btn-lg btn-success">
+                                <strong>Get Premium API Access</strong>
+                            </a>
+                            <small class="d-block mt-3 text-muted">Secure checkout via Fourthwall</small>
+                        }
+                        else
+                        {
+                            <p class="text-muted">Premium subscriptions coming soon.</p>
+                            <small class="d-block mt-3 text-muted">Check back soon or contact us for early access</small>
+                        }
+                    </div>
+
+                    <hr />
+
+                    <div class="text-center">
+                        <small class="text-muted d-block mb-2">Need help?</small>
+                        <a href="/api-docs" class="btn btn-outline-secondary btn-sm">View API Docs</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-8">
+            <h3>Frequently Asked Questions</h3>
+
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            How much does Premium cost?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            <strong>$4.99 per month</strong>, billed monthly. You can also purchase annually for $49.99/year to save $10. Cancel anytime with no penalties.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            Can I try premium for free?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            We offer a free tier with 100 requests/month and basic data. This is perfect for testing and small personal projects. If you need more, premium is the best option.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            Can I cancel my subscription?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes. You can cancel anytime through your Fourthwall account or by contacting us. Your API key will revert to free tier after the current billing period ends.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            What payment methods do you accept?
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            We use Fourthwall for secure payments. They accept all major credit cards, PayPal, and other payment methods. Your payment information is never shared with us.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                            Do you offer educational discounts?
+                        </button>
+                    </h2>
+                    <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            For non-profit, academic, or educational use, please <a href="/contact">contact us</a> to discuss options or discounted tiers.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @* 
+    TODO: Add Fourthwall subscription embed script here.
+    Fourthwall provides a subscription widget that can be embedded directly.
+    Configuration: customer email, subscription product ID, webhook URL (/api/v1/webhooks/fourthwall/subscription-activated)
+    *@
+}

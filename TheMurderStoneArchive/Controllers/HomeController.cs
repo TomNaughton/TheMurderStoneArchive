@@ -66,6 +66,11 @@ public class HomeController : Controller
         return View();
     }
 
+    public IActionResult ApiDocs()
+    {
+        return View();
+    }
+
     [HttpGet]
     public async Task<IActionResult> Campaign()
     {
@@ -292,13 +297,23 @@ public class HomeController : Controller
 
         var raised = contributions.Where(c => c.IsCountedInTotal).Sum(c => c.AmountGbp);
 
+        var subscriptions = await _context.Subscriptions
+            .AsNoTracking()
+            .OrderByDescending(s => s.StartedAtUtc)
+            .ToListAsync(cancellationToken);
+
+        // TotalAmountGbp is a computed property (not stored), so sum in-process
+        var subscriptionTotal = subscriptions.Sum(s => s.TotalAmountGbp);
+
         var vm = new CampaignAdminViewModel
         {
             CampaignId = campaign.Id,
             CampaignName = campaign.Name,
             TargetAmountGbp = campaign.TargetAmountGbp,
             RaisedAmountGbp = raised,
+            SubscriptionTotalAmountGbp = subscriptionTotal,
             Contributions = contributions,
+            Subscriptions = subscriptions,
             ManualContribution = new ManualContributionInput
             {
                 Source = "Manual"

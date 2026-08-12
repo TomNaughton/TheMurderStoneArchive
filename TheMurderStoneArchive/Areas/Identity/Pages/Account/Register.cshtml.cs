@@ -16,13 +16,15 @@ namespace TheMurderStoneArchive.Areas.Identity.Pages.Account
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
         private readonly System.Net.Http.IHttpClientFactory _httpClientFactory;
+        private readonly IWebHostEnvironment _environment;
 
-        public RegisterModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, Microsoft.Extensions.Configuration.IConfiguration configuration, System.Net.Http.IHttpClientFactory httpClientFactory)
+        public RegisterModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, Microsoft.Extensions.Configuration.IConfiguration configuration, System.Net.Http.IHttpClientFactory httpClientFactory, IWebHostEnvironment environment)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
             _httpClientFactory = httpClientFactory;
+            _environment = environment;
         }
 
         [BindProperty]
@@ -61,12 +63,17 @@ namespace TheMurderStoneArchive.Areas.Identity.Pages.Account
         {
             ReturnUrl = returnUrl;
             // Validate captcha first (reCAPTCHA v3)
-            var token = Request.Form["g-recaptcha-response"].ToString();
-            if (string.IsNullOrEmpty(token) || !await VerifyReCaptchaAsync(token, "register"))
+            // Skip captcha verification in development environment
+            if (!_environment.IsDevelopment())
             {
-                ModelState.AddModelError(string.Empty, "Captcha verification failed. Please try again.");
-                return Page();
+                var token = Request.Form["g-recaptcha-response"].ToString();
+                if (string.IsNullOrEmpty(token) || !await VerifyReCaptchaAsync(token, "register"))
+                {
+                    ModelState.AddModelError(string.Empty, "Captcha verification failed. Please try again.");
+                    return Page();
+                }
             }
+            
             if (!ModelState.IsValid)
             {
                 return Page();

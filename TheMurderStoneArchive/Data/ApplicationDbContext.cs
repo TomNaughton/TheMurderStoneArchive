@@ -1,16 +1,20 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using TheMurderStoneArchive.Models;
 
 namespace TheMurderStoneArchive.Data
 {
     // Inheriting from IdentityDbContext gives you user accounts AND custom tables
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IDataProtectionKeyContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
+
+        // Required by IDataProtectionKeyContext — stores keys in the database
+        public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
         public DbSet<MurderEvent> MurderEvents { get; set; }
         public DbSet<Location> Locations { get; set; }
@@ -26,6 +30,8 @@ namespace TheMurderStoneArchive.Data
         public DbSet<CtaClickEvent> CtaClickEvents { get; set; }
         public DbSet<DonationCampaign> DonationCampaigns { get; set; }
         public DbSet<MonetaryContribution> MonetaryContributions { get; set; }
+        public DbSet<Subscription> Subscriptions { get; set; }
+        public DbSet<ApiKey> ApiKeys { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -156,6 +162,29 @@ namespace TheMurderStoneArchive.Data
                 .WithMany(c => c.Contributions)
                 .HasForeignKey(c => c.DonationCampaignId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // ApiKey configuration
+            builder.Entity<ApiKey>()
+                .HasIndex(k => k.KeyHash)
+                .IsUnique();
+
+            builder.Entity<ApiKey>()
+                .HasOne(k => k.User)
+                .WithMany()
+                .HasForeignKey(k => k.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<ApiKey>()
+                .HasOne(k => k.Subscription)
+                .WithMany()
+                .HasForeignKey(k => k.SubscriptionId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<ApiKey>()
+                .HasIndex(k => k.IsRevoked);
+
+            builder.Entity<ApiKey>()
+                .HasIndex(k => k.CreatedAtUtc);
         }
     }
 }

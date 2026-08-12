@@ -47,6 +47,8 @@ namespace TheMurderStoneArchive.Helpers
 
         // API
         public const string CamelCaseJsonPropertyNaming = "CamelCase";
+        public const int MaxFreeApiKeysPerUser = 3;
+        public const int MaxPremiumApiKeysPerUser = 1;
 
         // HTTP
         public const string DefaultHttpClientName = "default";

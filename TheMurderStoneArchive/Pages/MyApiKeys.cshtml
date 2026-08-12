@@ -1,0 +1,441 @@
+@page "/api/my-keys"
+@model TheMurderStoneArchive.Pages.MyApiKeysModel
+@using TheMurderStoneArchive.Models
+
+@{
+    ViewData["Title"] = "My API Keys";
+}
+
+<style>
+    .key-row { transition: opacity 0.4s ease, background-color 0.4s ease; }
+    .key-row.fading-out { opacity: 0; background-color: #f8d7da; }
+    .key-row.fading-in { animation: fadeSlideIn 0.4s ease forwards; }
+    @@keyframes fadeSlideIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .btn-generate.loading, .btn-revoke.loading { opacity: 0.6; pointer-events: none; }
+    #notification-area { position: sticky; top: 1rem; z-index: 1050; }
+    .key-value { font-family: monospace; word-break: break-all; }
+    .copy-btn.copied { color: #198754; }
+</style>
+
+<div class="container mt-5">
+    <h1>My API Keys</h1>
+    <p class="text-muted">Manage your API keys for accessing the Murder Stone Archive API.</p>
+
+    @if (User.Identity?.IsAuthenticated == false)
+    {
+        <div class="alert alert-info">
+            <a href="/Identity/Account/Login">Sign in</a> to manage your API keys.
+        </div>
+        return;
+    }
+
+    @* TempData fallback banners (non-JS / direct page load) *@
+    @if (Model.GeneratedKeyMessage != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <strong>New API Key Generated!</strong>
+            <p class="mb-1">Copy this key now — <strong>you won't be able to see it again:</strong></p>
+            <code class="key-value bg-light p-2 d-block">@Model.GeneratedKeyMessage</code>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @* JS notification area *@
+    <div id="notification-area"></div>
+
+    @* Anti-forgery token for fetch calls *@
+    @Html.AntiForgeryToken()
+
+    @* Generate New Key *@
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Generate New API Key</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="keyName" class="form-label">Key Name <span class="text-muted fw-normal">(optional)</span></label>
+                <input type="text" class="form-control" id="keyName" placeholder="e.g., Research Project 2025" maxlength="100">
+                <small class="form-text text-muted">Give your key a friendly name, or leave blank for a default name</small>
+            </div>
+            <button id="btn-generate" class="btn btn-primary btn-generate" onclick="generateKey()">
+                Generate Key
+            </button>
+        </div>
+    </div>
+
+    @* API Keys List *@
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Your API Keys</h5>
+        </div>
+        <div id="keys-container">
+            @if (Model.ApiKeys?.Any() == true)
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Key</th>
+                                <th>Tier</th>
+                                <th>Status</th>
+                                <th>Requests (this month)</th>
+                                <th>Last Used</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keys-tbody">
+                            @foreach (var key in Model.ApiKeys)
+                            {
+                                <tr class="key-row @(key.IsRevoked ? "table-danger" : "")" data-key-id="@key.Id">
+                                    <td><strong>@key.Name</strong></td>
+                                    <td>
+                                        @if (key.KeyPrefix != null)
+                                        {
+                                            <code class="key-value">@key.KeyPrefix…</code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">••••••••</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (key.Tier == ApiKeyTier.Free)
+                                        {
+                                            <span class="badge bg-secondary" data-tier="Free">Free</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success" data-tier="Premium">Premium</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (key.IsRevoked)
+                                        {
+                                            <span class="badge bg-danger">Revoked</span>
+                                        }
+                                        else if (key.Tier == ApiKeyTier.Premium && key.SubscriptionExpiresAtUtc.HasValue && DateTime.UtcNow > key.SubscriptionExpiresAtUtc)
+                                        {
+                                            <span class="badge bg-warning">Expired</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                    </td>
+                                    <td>@key.RequestsThisMonth / @(key.Tier == ApiKeyTier.Free ? "100" : "10,000")</td>
+                                    <td>
+                                        @if (key.LastUsedAtUtc.HasValue)
+                                        {
+                                            <small>@key.LastUsedAtUtc.Value.ToString("yyyy-MM-dd HH:mm")</small>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-muted">Never</small>
+                                        }
+                                    </td>
+                                    <td><small>@key.CreatedAtUtc.ToString("yyyy-MM-dd")</small></td>
+                                    <td>
+                                        @if (!key.IsRevoked)
+                                        {
+                                            var isPremiumActiveJs = (key.Tier == ApiKeyTier.Premium
+                                                && key.SubscriptionExpiresAtUtc.HasValue
+                                                && DateTime.UtcNow <= key.SubscriptionExpiresAtUtc.Value) ? "true" : "false";
+                                            var isReplacedKey = key.Name.EndsWith(" (replaced)");
+                                            var btnClass = isPremiumActiveJs == "true"
+                                                ? (isReplacedKey ? "btn-warning" : "btn-success")
+                                                : "btn-danger";
+                                            var btnLabel = isPremiumActiveJs == "true"
+                                                ? (isReplacedKey ? "Regenerate" : "Generate")
+                                                : "Revoke";
+                                            <button class="btn btn-sm @btnClass btn-revoke"
+                                                    onclick="revokeKey(@key.Id, this, '@key.Tier.ToString()', @isPremiumActiveJs)">
+                                                @btnLabel
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div id="empty-state" class="card-body text-center text-muted py-5">
+                    <p>No API keys yet. Generate one to get started!</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    @* API Documentation *@
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">API Documentation</h5>
+        </div>
+        <div class="card-body">
+            <p>Learn how to use the Murder Stone Archive API:</p>
+            <a class="btn btn-outline-primary" asp-controller="Home" asp-action="ApiDocs" data-cta="nav-api-docs">API Docs</a>
+            <p class="mt-3 mb-0"><small class="text-muted"><strong>Free Tier:</strong> 100 requests/month, basic event data. <strong>Premium Tier:</strong> 10,000 requests/month, full details + analysis.</small></p>
+        </div>
+    </div>
+
+    @* Upgrade to Premium — always rendered; shown/hidden by JS *@
+    @{
+        var hasActiveFreeKey = Model.ApiKeys?.Any(k => k.Tier == ApiKeyTier.Free && !k.IsRevoked) == true;
+    }
+    <div id="upgrade-premium-box" class="card mt-4 border-success@(!hasActiveFreeKey ? " d-none" : "")">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Upgrade to Premium</h5>
+        </div>
+        <div class="card-body">
+            <p>Need more requests? Upgrade your API key to Premium for <strong>$4.99/month</strong> and get 10,000 requests/month + full data access.</p>
+            <a href="/api-premium" class="btn btn-success">Subscribe to Premium API Access</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://www.google.com/recaptcha/api.js?render=@Model.ReCaptchaSiteKey" async defer></script>
+<script>
+    const reCaptchaSiteKey = '@Model.ReCaptchaSiteKey';
+
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+    }
+
+    async function getReCaptchaToken(action) {
+        return new Promise((resolve) => {
+            if (typeof grecaptcha === 'undefined') { resolve(''); return; }
+            grecaptcha.ready(() => {
+                grecaptcha.execute(reCaptchaSiteKey, { action }).then(resolve).catch(() => resolve(''));
+            });
+        });
+    }
+
+    // ── Notifications ─────────────────────────────────────────────────────
+
+    function showNotification(message, type = 'success') {
+        const area = document.getElementById('notification-area');
+        const id = 'notif-' + Date.now();
+        area.insertAdjacentHTML('beforeend', `
+            <div id="${id}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`);
+        setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }
+        }, 6000);
+    }
+
+    function showKeyBanner(rawKey, customMessage) {
+        const area = document.getElementById('notification-area');
+        const id = 'key-banner-' + Date.now();
+        const safeKey = escHtml(rawKey);
+        const jsKey   = rawKey.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const headline = customMessage
+            ? escHtml(customMessage)
+            : 'New API Key Generated! Copy this key now — <strong>you won\'t be able to see it again:</strong>';
+        area.insertAdjacentHTML('beforeend', `
+            <div id="${id}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <p class="mb-1">${headline}</p>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <code class="key-value bg-light p-2 flex-grow-1">${safeKey}</code>
+                    <button class="btn btn-sm btn-outline-secondary copy-btn"
+                            onclick="copyKey('${jsKey}', this)">Copy</button>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`);
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function copyKey(key, btn) {
+        navigator.clipboard.writeText(key).then(() => {
+            btn.textContent = '✓ Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2500);
+        });
+    }
+
+    // ── Generate Key ──────────────────────────────────────────────────────
+
+    async function generateKey() {
+        const btn     = document.getElementById('btn-generate');
+        const keyName = document.getElementById('keyName').value.trim() || 'My API Key';
+
+        btn.classList.add('loading');
+        btn.textContent = 'Generating…';
+
+        try {
+            const recaptchaToken = await getReCaptchaToken('generate_api_key');
+            const res  = await fetch('?handler=GenerateKeyJson', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getAntiForgeryToken()
+                },
+                body: JSON.stringify({ keyName, recaptchaToken })
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                showNotification(escHtml(data.error ?? 'Failed to generate key.'), 'danger');
+                return;
+            }
+
+            document.getElementById('keyName').value = '';
+            showKeyBanner(data.rawKey);
+            addKeyRow(data.key);
+
+        } catch {
+            showNotification('An unexpected error occurred. Please try again.', 'danger');
+        } finally {
+            btn.classList.remove('loading');
+            btn.textContent = 'Generate Key';
+        }
+    }
+
+    // ── Revoke Key ────────────────────────────────────────────────────────
+
+    async function revokeKey(keyId, btn, tier, isPremiumActive) {
+        const msg = (tier === 'Premium' && isPremiumActive)
+            ? 'Revoking your premium key will immediately invalidate it, but a new premium key will be generated automatically so you won\'t lose access. Continue?'
+            : 'Are you sure you want to revoke this key? It will stop working immediately.';
+        if (!confirm(msg)) return;
+
+        btn.classList.add('loading');
+        btn.textContent = (tier === 'Premium' && isPremiumActive) ? 'Regenerating…' : 'Revoking…';
+
+        try {
+            const recaptchaToken = await getReCaptchaToken('revoke_api_key');
+            const res  = await fetch('?handler=RevokeKeyJson', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getAntiForgeryToken()
+                },
+                body: JSON.stringify({ apiKeyId: keyId, recaptchaToken })
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                showNotification(escHtml(data.error ?? 'Failed to revoke key.'), 'danger');
+                btn.classList.remove('loading');
+                btn.textContent = (tier === 'Premium' && isPremiumActive) ? 'Regenerate' : 'Revoke';
+                return;
+            }
+
+            const row = document.querySelector(`tr[data-key-id="${keyId}"]`);
+            if (row) {
+                row.classList.add('fading-out');
+                setTimeout(() => {
+                    row.classList.remove('fading-out');
+                    row.classList.add('table-danger');
+                    if (row.cells[3]) row.cells[3].innerHTML = '<span class="badge bg-danger">Revoked</span>';
+                    if (row.cells[7]) row.cells[7].innerHTML = '<span class="text-muted">—</span>';
+                    syncUpgradeBox();
+                }, 400);
+            }
+
+            if (data.replacementIssued && data.rawKey) {
+                showKeyBanner(data.rawKey, data.message);
+                addKeyRow(data.key);
+            } else {
+                showNotification('API key revoked successfully.', 'success');
+            }
+
+        } catch {
+            showNotification('An unexpected error occurred. Please try again.', 'danger');
+            btn.classList.remove('loading');
+            btn.textContent = (tier === 'Premium' && isPremiumActive) ? 'Regenerate' : 'Revoke';
+        }
+    }
+
+    // ── Upgrade box visibility ────────────────────────────────────────────
+
+    function syncUpgradeBox() {
+        const hasFreeKey = document.querySelector('tr.key-row:not(.table-danger) [data-tier="Free"]') !== null;
+        const box = document.getElementById('upgrade-premium-box');
+        if (box) box.classList.toggle('d-none', !hasFreeKey);
+    }
+
+    // ── DOM helpers ───────────────────────────────────────────────────────
+
+    function addKeyRow(key) {
+        const empty = document.getElementById('empty-state');
+        if (empty) empty.remove();
+
+        let tbody = document.getElementById('keys-tbody');
+        if (!tbody) {
+            document.getElementById('keys-container').innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th><th>Key</th><th>Tier</th><th>Status</th>
+                                <th>Requests (this month)</th><th>Last Used</th>
+                                <th>Created</th><th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keys-tbody"></tbody>
+                    </table>
+                </div>`;
+            tbody = document.getElementById('keys-tbody');
+        }
+
+        const tierBadge = key.tier === 'Premium'
+            ? '<span class="badge bg-success" data-tier="Premium">Premium</span>'
+            : '<span class="badge bg-secondary" data-tier="Free">Free</span>';
+        const revokeOnclick = `revokeKey(${key.id}, this, '${key.tier}', ${key.tier === 'Premium' ? 'true' : 'false'})`;
+        const isReplacedKey = key.name.endsWith(' (replaced)');
+        const revokeLabel = key.tier === 'Premium' ? (isReplacedKey ? 'Regenerate' : 'Generate') : 'Revoke';
+        const revokeBtnClass = key.tier === 'Premium' ? (isReplacedKey ? 'btn-warning' : 'btn-success') : 'btn-danger';
+
+        const tr = document.createElement('tr');
+        tr.className = 'key-row fading-in';
+        tr.dataset.keyId = key.id;
+        tr.innerHTML = `
+            <td><strong>${escHtml(key.name)}</strong></td>
+            <td><code class="key-value">${escHtml(key.keyPrefix ?? '')}…</code></td>
+            <td>${tierBadge}</td>
+            <td><span class="badge bg-success">Active</span></td>
+            <td>0 / ${key.limit.toLocaleString()}</td>
+            <td><small class="text-muted">Never</small></td>
+            <td><small>${escHtml(key.created)}</small></td>
+            <td><button class="btn btn-sm ${revokeBtnClass} btn-revoke"
+                        onclick="${revokeOnclick}">${revokeLabel}</button></td>`;
+        tbody.prepend(tr);
+        syncUpgradeBox();
+    }
+
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+</script>
+}

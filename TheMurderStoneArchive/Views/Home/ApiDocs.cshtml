@@ -1,0 +1,282 @@
+@using TheMurderStoneArchive.Models
+@inject Microsoft.Extensions.Options.IOptions<DonationOptions> DonationOptions
+@{
+    ViewData["Title"] = "API Documentation";
+    var options = DonationOptions.Value;
+}
+
+<div class="container mt-5">
+    <h1>Murder Stone Archive API Documentation</h1>
+    <p class="lead">Access our curated database of murder stone events programmatically.</p>
+
+    @if (!string.IsNullOrWhiteSpace(options.FourthwallSubscriptionUrl))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>Ready for Production?</strong> <a href="@options.FourthwallSubscriptionUrl" class="alert-link">Upgrade to Premium API Access</a> for just <strong>$4.99/month</strong> — 10,000 requests/month and full data access.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Quick Start -->
+    <section class="mt-5">
+        <h2>Quick Start</h2>
+        <div class="card">
+            <div class="card-body">
+                <h5>1. Generate an API Key</h5>
+                <p><a href="/api/my-keys">Create a free API key</a> to start using the API.</p>
+
+                <h5 class="mt-4">2. Make a Request</h5>
+                <pre><code>curl -H "X-Api-Key: your_api_key" "https://themurderstonearchive.com/api/v1/events"</code></pre>
+
+                <h5 class="mt-4">3. Parse the Response</h5>
+                <p>The API returns JSON. Free tier includes basic data; premium includes full details.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing / Tiers -->
+    <section class="mt-5">
+        <h2>Pricing & Tiers</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">Free Tier</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Perfect for learning and small projects.</p>
+                        <ul class="list-unstyled">
+                            <li>✓ 100 requests/month</li>
+                            <li>✓ Basic event data</li>
+                            <li>✓ Title, year, location, victim count</li>
+                            <li>✗ Descriptions & full details</li>
+                            <li>✗ Analysis & trends</li>
+                        </ul>
+                        <p class="text-muted mt-3"><strong>Forever free.</strong> No credit card required.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Premium Tier</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">For researchers and production uses.</p>
+                        <ul class="list-unstyled">
+                            <li>✓ 10,000 requests/month</li>
+                            <li>✓ All free tier data</li>
+                            <li>✓ Full descriptions & circumstances</li>
+                            <li>✓ Perpetrator & monument details</li>
+                            <li>✓ Analysis API (clusters, trends)</li>
+                        </ul>
+                        <p class="text-muted mt-3"><strong>$4.99/month</strong> • <a href="/api-premium">Subscribe now</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Endpoints -->
+    <section class="mt-5">
+        <h2>API Endpoints</h2>
+
+        <h4 class="mt-4">GET /api/v1/events</h4>
+        <p>List all murder stone events with pagination.</p>
+        <div class="card mb-3">
+            <div class="card-header">Headers</div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td><code>X-Api-Key</code></td>
+                        <td><code>string</code></td>
+                        <td>Required. Your API key.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-header">Query Parameters</div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td><code>pageNumber</code></td>
+                        <td><code>int</code></td>
+                        <td>Optional. Page number (default: 1).</td>
+                    </tr>
+                    <tr>
+                        <td><code>pageSize</code></td>
+                        <td><code>int</code></td>
+                        <td>Optional. Results per page, max 500 (default: 50).</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <p><strong>Example:</strong></p>
+        <pre><code>curl -H "X-Api-Key: msa_abc123" "https://themurderstonearchive.com/api/v1/events?pageNumber=1&pageSize=20"</code></pre>
+
+        <h4 class="mt-4">GET /api/v1/events/search</h4>
+        <p>Search for events by title, description, or location.</p>
+        <div class="card mb-3">
+            <div class="card-header">Headers</div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td><code>X-Api-Key</code></td>
+                        <td><code>string</code></td>
+                        <td>Required. Your API key.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-header">Query Parameters</div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td><code>query</code></td>
+                        <td><code>string</code></td>
+                        <td>Required. Search term (min 2 characters).</td>
+                    </tr>
+                    <tr>
+                        <td><code>pageNumber</code></td>
+                        <td><code>int</code></td>
+                        <td>Optional. Page number (default: 1).</td>
+                    </tr>
+                    <tr>
+                        <td><code>pageSize</code></td>
+                        <td><code>int</code></td>
+                        <td>Optional. Results per page (default: 50).</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <p><strong>Example:</strong></p>
+        <pre><code>curl -H "X-Api-Key: msa_abc123" "https://themurderstonearchive.com/api/v1/events/search?query=Scotland&pageSize=10"</code></pre>
+
+        <h4 class="mt-4">GET /api/v1/events/{id}</h4>
+        <p>Get a single event by ID.</p>
+        <div class="card mb-3">
+            <div class="card-header">Headers</div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td><code>X-Api-Key</code></td>
+                        <td><code>string</code></td>
+                        <td>Required. Your API key.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <p><strong>Example:</strong></p>
+        <pre><code>curl -H "X-Api-Key: msa_abc123" "https://themurderstonearchive.com/api/v1/events/42"</code></pre>
+
+        <h4 class="mt-4">GET /api/v1/events/analysis</h4>
+        <p><strong>Premium only.</strong> Get aggregated analysis (clusters, trends, region insights).</p>
+        <div class="card mb-3">
+            <div class="card-header">Headers</div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td><code>X-Api-Key</code></td>
+                        <td><code>string</code></td>
+                        <td>Required. Your premium API key.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <p><strong>Example:</strong></p>
+        <pre><code>curl -H "X-Api-Key: msa_abc123" "https://themurderstonearchive.com/api/v1/events/analysis"</code></pre>
+    </section>
+
+    <!-- Response Format -->
+    <section class="mt-5">
+        <h2>Response Format</h2>
+        <p>All endpoints return JSON. Success responses follow this format:</p>
+        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "title": "Stone of the Murdered Maiden",
+      "year": 1650,
+      "location": {
+        "id": 1,
+        "name": "Perthshire, Scotland",
+        "latitude": 56.89,
+        "longitude": -3.51
+      },
+      "victimCount": 1
+    }
+  ],
+  "totalCount": 125,
+  "pageNumber": 1,
+  "pageSize": 50,
+  "message": null
+}</code></pre>
+
+        <p class="mt-3">Error responses:</p>
+        <pre><code>{
+  "success": false,
+  "message": "Invalid or revoked API key",
+  "errorCode": "INVALID_API_KEY"
+}</code></pre>
+    </section>
+
+    <!-- Rate Limits -->
+    <section class="mt-5">
+        <h2>Rate Limits & Quotas</h2>
+        <div class="card">
+            <div class="card-body">
+                <table class="table mb-0">
+                    <tr>
+                        <th></th>
+                        <th>Free Tier</th>
+                        <th>Premium Tier</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Monthly requests</strong></td>
+                        <td>100</td>
+                        <td>10,000</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Reset period</strong></td>
+                        <td>Monthly (automatic)</td>
+                        <td>Monthly (automatic)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Response on limit exceeded</strong></td>
+                        <td>HTTP 429 (Too Many Requests)</td>
+                        <td>HTTP 429 (Too Many Requests)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <p class="mt-3">Each request counts toward your monthly quota, regardless of success or failure.</p>
+    </section>
+
+    <!-- Getting Started -->
+    <section class="mt-5">
+        <h2>Next Steps</h2>
+        <div class="card">
+            <div class="card-body">
+                <ol>
+                    <li><strong><a href="/api/my-keys">Generate your API key</a></strong> (takes 30 seconds)</li>
+                    <li><strong>Read the examples above</strong> to understand request/response format</li>
+                    <li><strong>Make your first API call</strong> using the query examples</li>
+                    <li><strong><a href="/api-premium">Upgrade to Premium</a></strong> for larger projects and full data access</li>
+                </ol>
+            </div>
+        </div>
+    </section>
+
+    <!-- Support -->
+    <section class="mt-5 mb-5">
+        <h2>Support & Feedback</h2>
+        <div class="card">
+            <div class="card-body">
+                <p>Have questions or found a bug? <a href="/contact">Contact us</a> or visit our <a href="https://github.com/TomNaughton/TheMurderStoneArchive">GitHub repository</a>.</p>
+            </div>
+        </div>
+    </section>
+</div>

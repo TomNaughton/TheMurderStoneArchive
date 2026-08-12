@@ -8,9 +8,18 @@ namespace TheMurderStoneArchive.Models
 
         public decimal TargetAmountGbp { get; set; }
 
+        /// <summary>Total from one-off donations (MonetaryContribution rows counted in total).</summary>
         public decimal RaisedAmountGbp { get; set; }
 
+        /// <summary>Sum of TotalAmountGbp across all Subscription records (accrued monthly amounts).</summary>
+        public decimal SubscriptionTotalAmountGbp { get; set; }
+
+        /// <summary>Combined donations + subscription accrual.</summary>
+        public decimal GrandTotalAmountGbp => RaisedAmountGbp + SubscriptionTotalAmountGbp;
+
         public IReadOnlyList<MonetaryContribution> Contributions { get; set; } = [];
+
+        public IReadOnlyList<Subscription> Subscriptions { get; set; } = [];
 
         public ManualContributionInput ManualContribution { get; set; } = new();
     }

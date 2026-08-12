@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -62,6 +63,10 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString(AppConstants.ConnectionStringKey)));
 
+// Persist Data Protection keys to the database so they survive container restarts
+builder.Services.AddDataProtection()
+    .PersistKeysToDbContext<ApplicationDbContext>();
+
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     // Keep email confirmation off for now so users can sign in immediately
@@ -95,6 +100,8 @@ builder.Services.AddScoped<IPdfDocumentService, PdfDocumentService>();
 builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IPatreonWebhookService, PatreonWebhookService>();
 builder.Services.AddScoped<IFourthwallWebhookService, FourthwallWebhookService>();
+builder.Services.AddScoped<IApiAuthenticationService, ApiAuthenticationService>();
+builder.Services.AddScoped<IFourthwallApiSubscriptionService, FourthwallApiSubscriptionService>();
 
 // Register FluentValidation
 builder.Services.AddFluentValidationAutoValidation()
@@ -184,6 +191,12 @@ if (string.Equals(donationProvider, "Fourthwall", StringComparison.OrdinalIgnore
     {
         logger.LogWarning("Fourthwall donation provider is enabled but webhook secret is missing. Set Donation__FourthwallWebhookSecret environment variable.");
     }
+}
+
+var fourthwallApiSubSecret = builder.Configuration[$"{AppConstants.DonationSection}:FourthwallApiSubscriptionWebhookSecret"];
+if (string.IsNullOrWhiteSpace(fourthwallApiSubSecret))
+{
+    logger.LogWarning("Fourthwall API subscription webhook secret is not configured. Set Donation__FourthwallApiSubscriptionWebhookSecret to secure the subscription webhook endpoints.");
 }
 
 using (var scope = app.Services.CreateScope())

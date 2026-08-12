@@ -14,9 +14,15 @@ namespace TheMurderStoneArchive.Models
 
         public string FourthwallOneTimePaymentUrl { get; set; } = string.Empty;
 
+        public string FourthwallSubscriptionUrl { get; set; } = string.Empty;
+
         public string FourthwallWebhookSecret { get; set; } = string.Empty;
 
+        public string FourthwallApiSubscriptionWebhookSecret { get; set; } = string.Empty;
+
         public string FourthwallOneTimeEventTypes { get; set; } = "DONATION,order.paid,checkout.completed";
+
+        public string FourthwallSubscriptionEventTypes { get; set; } = "SUBSCRIPTION_PURCHASED,SUBSCRIPTION_EXPIRED,SUBSCRIPTION_CHANGED";
 
         public string ExchangeRateApiBaseUrl { get; set; } = "https://api.exchangerate.host";
 

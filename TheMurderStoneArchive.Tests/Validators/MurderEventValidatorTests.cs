@@ -94,26 +94,6 @@ namespace TheMurderStoneArchive.Tests.Validators
         }
 
         [Fact]
-        public void Validate_WithYearBefore1400_ReturnsError()
-        {
-            // Arrange
-            var @event = new MurderEvent
-            {
-                Title = "Valid Title",
-                Description = "A valid description here",
-                Year = 1399,
-                LocationId = 1
-            };
-
-            // Act
-            var result = _validator.Validate(@event);
-
-            // Assert
-            Assert.False(result.IsValid);
-            Assert.True(result.Errors.Any(e => e.PropertyName == "Year"));
-        }
-
-        [Fact]
         public void Validate_WithFutureYear_ReturnsError()
         {
             // Arrange

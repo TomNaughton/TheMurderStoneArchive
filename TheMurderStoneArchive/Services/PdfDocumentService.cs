@@ -6,6 +6,7 @@ using QuestPDF.Infrastructure;
 using System.Security.Cryptography;
 using System.Text;
 using TheMurderStoneArchive.Data;
+using TheMurderStoneArchive.Helpers;
 using TheMurderStoneArchive.Models;
 
 namespace TheMurderStoneArchive.Services
@@ -148,7 +149,7 @@ namespace TheMurderStoneArchive.Services
                     {
                         col.Spacing(12);
 
-                        col.Item().Text("This overview is generated from approved records and identifies non-obvious spatial patterns using proximity hotspots, county concentrations, and potential linear alignments.");
+                        col.Item().Text("This overview is generated from approved records and identifies non-obvious spatial patterns using proximity hotspots, region concentrations, and potential linear alignments.");
 
                         col.Item().Row(row =>
                         {
@@ -199,7 +200,7 @@ namespace TheMurderStoneArchive.Services
                             {
                                 header.Cell().Element(TableHeaderCell).Text("Cluster");
                                 header.Cell().Element(TableHeaderCell).Text("Type");
-                                header.Cell().Element(TableHeaderCell).Text("County");
+                                header.Cell().Element(TableHeaderCell).Text("Region");
                                 header.Cell().Element(TableHeaderCell).Text("Evidence");
                                 header.Cell().Element(TableHeaderCell).AlignRight().Text("Records");
                             });
@@ -208,7 +209,7 @@ namespace TheMurderStoneArchive.Services
                             {
                                 table.Cell().Element(TableBodyCell).Text(cluster.DisplayName);
                                 table.Cell().Element(TableBodyCell).Text(cluster.ClusterType);
-                                table.Cell().Element(TableBodyCell).Text(cluster.InferredCounty);
+                                table.Cell().Element(TableBodyCell).Text(cluster.InferredRegion);
                                 table.Cell().Element(TableBodyCell).Text(cluster.PatternEvidence);
                                 table.Cell().Element(TableBodyCell).AlignRight().Text(cluster.Events.Count.ToString());
                             }
@@ -414,7 +415,7 @@ namespace TheMurderStoneArchive.Services
                             }
                         });
 
-                        col.Item().Text("Temporal anomalies and county shifts").SemiBold().FontSize(12);
+                        col.Item().Text("Temporal anomalies and region shifts").SemiBold().FontSize(12);
                         col.Item().Element(Card).Column(card =>
                         {
                             card.Spacing(6);
@@ -444,7 +445,7 @@ namespace TheMurderStoneArchive.Services
                                 }
                             });
 
-                            card.Item().Text("County chronology shift").SemiBold().FontSize(10.5f);
+                            card.Item().Text("Region chronology shift").SemiBold().FontSize(10.5f);
                             card.Item().Table(table =>
                             {
                                 table.ColumnsDefinition(columns =>
@@ -457,15 +458,15 @@ namespace TheMurderStoneArchive.Services
 
                                 table.Header(header =>
                                 {
-                                    header.Cell().Element(TableHeaderCell).Text("County");
+                                    header.Cell().Element(TableHeaderCell).Text("Region");
                                     header.Cell().Element(TableHeaderCell).AlignRight().Text("Early");
                                     header.Cell().Element(TableHeaderCell).AlignRight().Text("Late");
                                     header.Cell().Element(TableHeaderCell).AlignRight().Text("Shift yrs");
                                 });
 
-                                foreach (var item in analytics.SpatioTemporalCountyShifts.Take(8))
+                                foreach (var item in analytics.SpatioTemporalRegionShifts.Take(8))
                                 {
-                                    table.Cell().Element(TableBodyCell).Text(item.County);
+                                    table.Cell().Element(TableBodyCell).Text(item.Region);
                                     table.Cell().Element(TableBodyCell).AlignRight().Text(item.EarlyPeriodRecords.ToString());
                                     table.Cell().Element(TableBodyCell).AlignRight().Text(item.LatePeriodRecords.ToString());
                                     table.Cell().Element(TableBodyCell).AlignRight().Text(item.MeanYearShift.ToString("0.0"));
@@ -477,7 +478,7 @@ namespace TheMurderStoneArchive.Services
                         col.Item().Element(Card).Column(card =>
                         {
                             card.Spacing(5);
-                            card.Item().Text("Top analytical clusters with county context, centroid coordinates, and inferred pattern evidence.").FontSize(9).FontColor(Colors.Grey.Darken2);
+                            card.Item().Text("Top analytical clusters with region context, centroid coordinates, and inferred pattern evidence.").FontSize(9).FontColor(Colors.Grey.Darken2);
                             card.Item().Table(table =>
                             {
                                 table.ColumnsDefinition(columns =>
@@ -494,7 +495,7 @@ namespace TheMurderStoneArchive.Services
                                 {
                                     header.Cell().Element(TableHeaderCell).Text("Cluster");
                                     header.Cell().Element(TableHeaderCell).Text("Type");
-                                    header.Cell().Element(TableHeaderCell).Text("County");
+                                    header.Cell().Element(TableHeaderCell).Text("Region");
                                     header.Cell().Element(TableHeaderCell).Text("Evidence");
                                     header.Cell().Element(TableHeaderCell).Text("Centroid");
                                     header.Cell().Element(TableHeaderCell).AlignRight().Text("Records");
@@ -508,7 +509,7 @@ namespace TheMurderStoneArchive.Services
 
                                     table.Cell().Element(TableBodyCell).Text(cluster.DisplayName);
                                     table.Cell().Element(TableBodyCell).Text(cluster.ClusterType);
-                                    table.Cell().Element(TableBodyCell).Text(cluster.InferredCounty);
+                                    table.Cell().Element(TableBodyCell).Text(cluster.InferredRegion);
                                     table.Cell().Element(TableBodyCell).Text(cluster.PatternEvidence);
                                     table.Cell().Element(TableBodyCell).Text(centroid);
                                     table.Cell().Element(TableBodyCell).AlignRight().Text(cluster.Events.Count.ToString());
@@ -578,7 +579,7 @@ namespace TheMurderStoneArchive.Services
                             });
                         });
 
-                        col.Item().Text("County profiles and alignment confidence").SemiBold().FontSize(12);
+                        col.Item().Text("Region profiles and alignment confidence").SemiBold().FontSize(12);
                         col.Item().Element(Card).Column(card =>
                         {
                             card.Spacing(6);
@@ -594,15 +595,15 @@ namespace TheMurderStoneArchive.Services
 
                                 table.Header(header =>
                                 {
-                                    header.Cell().Element(TableHeaderCell).Text("County");
+                                    header.Cell().Element(TableHeaderCell).Text("Region");
                                     header.Cell().Element(TableHeaderCell).AlignRight().Text("Records");
                                     header.Cell().Element(TableHeaderCell).AlignRight().Text("Protected %");
                                     header.Cell().Element(TableHeaderCell).AlignRight().Text("Decades");
                                 });
 
-                                foreach (var item in analytics.CountyProfiles.Take(8))
+                                foreach (var item in analytics.RegionProfiles.Take(8))
                                 {
-                                    table.Cell().Element(TableBodyCell).Text(item.County);
+                                    table.Cell().Element(TableBodyCell).Text(item.Region);
                                     table.Cell().Element(TableBodyCell).AlignRight().Text(item.Records.ToString());
                                     table.Cell().Element(TableBodyCell).AlignRight().Text((item.ProtectedRate * 100).ToString("0"));
                                     table.Cell().Element(TableBodyCell).AlignRight().Text(item.DecadeSpread.ToString());
@@ -623,7 +624,7 @@ namespace TheMurderStoneArchive.Services
                                 table.Header(header =>
                                 {
                                     header.Cell().Element(TableHeaderCell).Text("Cluster");
-                                    header.Cell().Element(TableHeaderCell).Text("County");
+                                    header.Cell().Element(TableHeaderCell).Text("Region");
                                     header.Cell().Element(TableHeaderCell).AlignRight().Text("Span km");
                                     header.Cell().Element(TableHeaderCell).AlignRight().Text("Score");
                                 });
@@ -631,7 +632,7 @@ namespace TheMurderStoneArchive.Services
                                 foreach (var item in analytics.AlignmentConfidence.Take(8))
                                 {
                                     table.Cell().Element(TableBodyCell).Text(item.ClusterName);
-                                    table.Cell().Element(TableBodyCell).Text(item.County);
+                                    table.Cell().Element(TableBodyCell).Text(item.Region);
                                     table.Cell().Element(TableBodyCell).AlignRight().Text(item.SpanKm.ToString("0.0"));
                                     table.Cell().Element(TableBodyCell).AlignRight().Text(item.ConfidenceScore.ToString("0"));
                                 }
@@ -656,14 +657,14 @@ namespace TheMurderStoneArchive.Services
                                 table.Header(header =>
                                 {
                                     header.Cell().Element(TableHeaderCell).Text("Event");
-                                    header.Cell().Element(TableHeaderCell).Text("County");
+                                    header.Cell().Element(TableHeaderCell).Text("Region");
                                     header.Cell().Element(TableHeaderCell).AlignRight().Text("Risk");
                                 });
 
                                 foreach (var item in analytics.ProtectionRiskScores.Take(8))
                                 {
                                     table.Cell().Element(TableBodyCell).Text(item.Title);
-                                    table.Cell().Element(TableBodyCell).Text(item.County);
+                                    table.Cell().Element(TableBodyCell).Text(item.Region);
                                     table.Cell().Element(TableBodyCell).AlignRight().Text(item.Score.ToString("0"));
                                 }
                             });
@@ -706,14 +707,14 @@ namespace TheMurderStoneArchive.Services
                                 table.Header(header =>
                                 {
                                     header.Cell().Element(TableHeaderCell).Text("Event");
-                                    header.Cell().Element(TableHeaderCell).Text("County");
+                                    header.Cell().Element(TableHeaderCell).Text("Region");
                                     header.Cell().Element(TableHeaderCell).AlignRight().Text("Nearest km");
                                 });
 
                                 foreach (var item in analytics.Outliers.Take(8))
                                 {
                                     table.Cell().Element(TableBodyCell).Text(item.Title);
-                                    table.Cell().Element(TableBodyCell).Text(item.County);
+                                    table.Cell().Element(TableBodyCell).Text(item.Region);
                                     table.Cell().Element(TableBodyCell).AlignRight().Text(item.NearestDistanceKm.ToString("0.0"));
                                 }
                             });
@@ -840,7 +841,7 @@ namespace TheMurderStoneArchive.Services
             foreach (var item in events)
             {
                 item.NormalizedLocationName = NormalizeLocationName(item.LocationName);
-                item.InferredCounty = InferCounty(item.LocationName, item.Latitude, item.Longitude);
+                item.InferredRegion = InferRegion(item.LocationName, item.Latitude, item.Longitude);
             }
 
             return events;
@@ -926,7 +927,7 @@ namespace TheMurderStoneArchive.Services
 
             var clusters = new List<LocationCluster>();
             clusters.AddRange(BuildProximityClusters(events, maxClusterDistanceKm, minEventsPerCluster));
-            clusters.AddRange(BuildCountyClusters(events, minEventsPerCluster));
+            clusters.AddRange(BuildRegionClusters(events, minEventsPerCluster));
             clusters.AddRange(BuildAlignmentClusters(events, minEventsForAlignment, maxAlignmentOffsetKm, minAlignmentSpanKm));
 
             foreach (var cluster in clusters)
@@ -938,7 +939,7 @@ namespace TheMurderStoneArchive.Services
                     cluster.CentroidLongitude = coords.Average(e => e.Longitude!.Value);
                 }
 
-                cluster.InferredCounty = DetermineDominantCounty(cluster.Events);
+                cluster.InferredRegion = DetermineDominantRegion(cluster.Events);
             }
 
             return clusters
@@ -1002,17 +1003,17 @@ namespace TheMurderStoneArchive.Services
                 var centroidLat = clusterEvents.Average(e => e.Latitude!.Value);
                 var centroidLon = clusterEvents.Average(e => e.Longitude!.Value);
                 var radiusKm = clusterEvents.Max(e => HaversineDistanceKm(centroidLat, centroidLon, e.Latitude!.Value, e.Longitude!.Value));
-                var county = DetermineDominantCounty(clusterEvents);
+                var region = DetermineDominantRegion(clusterEvents);
 
                 var cluster = new LocationCluster
                 {
                     NormalizedName = $"proximity-{centroidLat:0.000}-{centroidLon:0.000}",
-                    DisplayName = county != "Unknown"
-                        ? $"{county} proximity hotspot"
+                    DisplayName = region != "Unknown"
+                        ? $"{region} proximity hotspot"
                         : "Proximity hotspot",
                     ClusterType = "Proximity",
                     PatternEvidence = $"{clusterEvents.Count} records within ~{radiusKm:0.0} km of centroid",
-                    InferredCounty = county,
+                    InferredRegion = region,
                     CentroidLatitude = centroidLat,
                     CentroidLongitude = centroidLon
                 };
@@ -1024,22 +1025,22 @@ namespace TheMurderStoneArchive.Services
             return clusters;
         }
 
-        private static IEnumerable<LocationCluster> BuildCountyClusters(IReadOnlyList<EventSnapshot> events, int minEvents)
+        private static IEnumerable<LocationCluster> BuildRegionClusters(IReadOnlyList<EventSnapshot> events, int minEvents)
         {
             return events
-                .Where(e => !string.IsNullOrWhiteSpace(e.InferredCounty) && !string.Equals(e.InferredCounty, "Unknown", StringComparison.OrdinalIgnoreCase))
-                .GroupBy(e => e.InferredCounty, StringComparer.OrdinalIgnoreCase)
+                .Where(e => !string.IsNullOrWhiteSpace(e.InferredRegion) && !string.Equals(e.InferredRegion, "Unknown", StringComparison.OrdinalIgnoreCase))
+                .GroupBy(e => e.InferredRegion, StringComparer.OrdinalIgnoreCase)
                 .Where(g => g.Count() >= minEvents)
                 .Select(g =>
                 {
-                    var county = g.First().InferredCounty;
+                    var region = g.First().InferredRegion;
                     var cluster = new LocationCluster
                     {
-                        NormalizedName = $"county-{NormalizeLocationName(county)}",
-                        DisplayName = $"{county} county concentration",
-                        ClusterType = "County",
-                        PatternEvidence = $"{g.Count()} records inferred in the same county",
-                        InferredCounty = county
+                        NormalizedName = $"region-{NormalizeLocationName(region)}",
+                        DisplayName = $"{region} region concentration",
+                        ClusterType = "Region",
+                        PatternEvidence = $"{g.Count()} records inferred in the same region",
+                        InferredRegion = region
                     };
 
                     cluster.Events.AddRange(g);
@@ -1056,13 +1057,13 @@ namespace TheMurderStoneArchive.Services
         {
             var output = new List<LocationCluster>();
 
-            var countyGroups = events
+            var regionGroups = events
                 .Where(e => e.Latitude.HasValue && e.Longitude.HasValue)
-                .GroupBy(e => e.InferredCounty, StringComparer.OrdinalIgnoreCase);
+                .GroupBy(e => e.InferredRegion, StringComparer.OrdinalIgnoreCase);
 
-            foreach (var countyGroup in countyGroups)
+            foreach (var regionGroup in regionGroups)
             {
-                var points = countyGroup.ToList();
+                var points = regionGroup.ToList();
                 if (points.Count < minEvents)
                 {
                     continue;
@@ -1089,16 +1090,16 @@ namespace TheMurderStoneArchive.Services
                     continue;
                 }
 
-                var county = DetermineDominantCounty(aligned);
+                var region = DetermineDominantRegion(aligned);
                 var cluster = new LocationCluster
                 {
-                    NormalizedName = $"alignment-{NormalizeLocationName(county)}-{pair.First.Id}-{pair.Second.Id}",
-                    DisplayName = county != "Unknown"
-                        ? $"{county} linear alignment"
+                    NormalizedName = $"alignment-{NormalizeLocationName(region)}-{pair.First.Id}-{pair.Second.Id}",
+                    DisplayName = region != "Unknown"
+                        ? $"{region} linear alignment"
                         : "Linear alignment pattern",
                     ClusterType = "Alignment",
                     PatternEvidence = $"{aligned.Count} records aligned within ~{maxOffsetKm:0.0} km across ~{lineSpanKm:0.0} km",
-                    InferredCounty = county
+                    InferredRegion = region
                 };
 
                 cluster.Events.AddRange(aligned);
@@ -1189,10 +1190,10 @@ namespace TheMurderStoneArchive.Services
             return projections.Max() - projections.Min();
         }
 
-        private static string DetermineDominantCounty(IEnumerable<EventSnapshot> events)
+        private static string DetermineDominantRegion(IEnumerable<EventSnapshot> events)
         {
             return events
-                .Select(e => e.InferredCounty)
+                .Select(e => e.InferredRegion)
                 .Where(c => !string.IsNullOrWhiteSpace(c) && !string.Equals(c, "Unknown", StringComparison.OrdinalIgnoreCase))
                 .GroupBy(c => c!, StringComparer.OrdinalIgnoreCase)
                 .OrderByDescending(g => g.Count())
@@ -1206,23 +1207,19 @@ namespace TheMurderStoneArchive.Services
         private static double LongitudeDeltaToKm(double longitudeDelta, double referenceLatitude)
             => longitudeDelta * 111.32 * Math.Cos(DegreesToRadians(referenceLatitude));
 
-        private static string InferCounty(string locationName, double? latitude, double? longitude)
+        private static string InferRegion(string locationName, double? latitude, double? longitude)
         {
             if (!string.IsNullOrWhiteSpace(locationName))
             {
-                var lower = locationName.ToLowerInvariant();
-                foreach (var county in CountyKeywords.Keys)
-                {
-                    if (lower.Contains(county, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return CountyKeywords[county];
-                    }
-                }
+                foreach (var kv in RegionData.Keywords)
+                    if (RegionData.ContainsWholeWord(locationName, kv.Key))
+                        return kv.Value;
             }
 
             if (latitude.HasValue && longitude.HasValue)
             {
-                var nearest = CountyCentroids
+                const double FallbackRadiusKm = 80.0;
+                var nearest = RegionData.Centroids
                     .Select(c => new
                     {
                         c.Key,
@@ -1231,10 +1228,8 @@ namespace TheMurderStoneArchive.Services
                     .OrderBy(x => x.Distance)
                     .FirstOrDefault();
 
-                if (nearest != null && nearest.Distance <= 45)
-                {
+                if (nearest != null && nearest.Distance <= FallbackRadiusKm)
                     return nearest.Key;
-                }
             }
 
             return "Unknown";
@@ -1318,10 +1313,10 @@ namespace TheMurderStoneArchive.Services
             return new DeepAnalysisResult
             {
                 TemporalAnomalies = BuildTemporalAnomalies(events),
-                SpatioTemporalCountyShifts = BuildSpatioTemporalCountyShifts(events),
+                SpatioTemporalRegionShifts = BuildSpatioTemporalRegionShifts(events),
                 NearestNeighbour = nearestNeighbour,
                 NarrativeEvolutionByEra = BuildNarrativeEvolutionByEra(events),
-                CountyProfiles = BuildCountyProfiles(events, trends),
+                RegionProfiles = BuildRegionProfiles(events, trends),
                 ProtectionRiskScores = BuildProtectionRiskScores(events),
                 UncertaintyScores = BuildUncertaintyScores(events),
                 Outliers = BuildOutliers(events, nearestNeighbour),
@@ -1366,12 +1361,12 @@ namespace TheMurderStoneArchive.Services
                 .ToList();
         }
 
-        private static List<CountyShift> BuildSpatioTemporalCountyShifts(IReadOnlyList<EventSnapshot> events)
+        private static List<RegionShift> BuildSpatioTemporalRegionShifts(IReadOnlyList<EventSnapshot> events)
         {
             return events
                 .Where(e => e.Year > 0)
-                .Where(e => !string.IsNullOrWhiteSpace(e.InferredCounty) && !string.Equals(e.InferredCounty, "Unknown", StringComparison.OrdinalIgnoreCase))
-                .GroupBy(e => e.InferredCounty, StringComparer.OrdinalIgnoreCase)
+                .Where(e => !string.IsNullOrWhiteSpace(e.InferredRegion) && !string.Equals(e.InferredRegion, "Unknown", StringComparison.OrdinalIgnoreCase))
+                .GroupBy(e => e.InferredRegion, StringComparer.OrdinalIgnoreCase)
                 .Select(g =>
                 {
                     var ordered = g.OrderBy(e => e.Year).ToList();
@@ -1381,9 +1376,9 @@ namespace TheMurderStoneArchive.Services
                     var earlyMean = early.Count > 0 ? early.Average(e => e.Year) : 0;
                     var lateMean = late.Count > 0 ? late.Average(e => e.Year) : 0;
 
-                    return new CountyShift
+                    return new RegionShift
                     {
-                        County = g.Key,
+                        Region = g.Key,
                         TotalRecords = g.Count(),
                         EarlyPeriodRecords = early.Count,
                         LatePeriodRecords = late.Count,
@@ -1446,20 +1441,20 @@ namespace TheMurderStoneArchive.Services
             return profiles;
         }
 
-        private static List<CountyProfile> BuildCountyProfiles(IReadOnlyList<EventSnapshot> events, TrendAnalysis trends)
+        private static List<RegionProfile> BuildRegionProfiles(IReadOnlyList<EventSnapshot> events, TrendAnalysis trends)
         {
             return events
-                .Where(e => !string.IsNullOrWhiteSpace(e.InferredCounty) && !string.Equals(e.InferredCounty, "Unknown", StringComparison.OrdinalIgnoreCase))
-                .GroupBy(e => e.InferredCounty, StringComparer.OrdinalIgnoreCase)
+                .Where(e => !string.IsNullOrWhiteSpace(e.InferredRegion) && !string.Equals(e.InferredRegion, "Unknown", StringComparison.OrdinalIgnoreCase))
+                .GroupBy(e => e.InferredRegion, StringComparer.OrdinalIgnoreCase)
                 .Select(g =>
                 {
                     var decadeSpread = g.Where(x => x.Year > 0).Select(x => (x.Year / 10) * 10).Distinct().Count();
                     var protectedRate = g.Any() ? (double)g.Count(x => x.IsProtected) / g.Count() : 0;
                     var themeDensity = trends.Themes.Count == 0 ? 0 : trends.Themes.Average(t => g.Count(e => ContainsAnyKeyword(e.Description, TrendKeywords[t.Name])));
 
-                    return new CountyProfile
+                    return new RegionProfile
                     {
-                        County = g.Key,
+                        Region = g.Key,
                         Records = g.Count(),
                         ProtectedRate = protectedRate,
                         DecadeSpread = decadeSpread,
@@ -1468,7 +1463,7 @@ namespace TheMurderStoneArchive.Services
                 })
                 .Where(x => x.Records >= 2)
                 .OrderByDescending(x => x.Records)
-                .ThenBy(x => x.County)
+                .ThenBy(x => x.Region)
                 .Take(10)
                 .ToList();
         }
@@ -1572,7 +1567,7 @@ namespace TheMurderStoneArchive.Services
                     {
                         EventId = e.Id,
                         Title = e.Title,
-                        County = e.InferredCounty,
+                        Region = e.InferredRegion,
                         Score = Math.Clamp(score, 0, 100)
                     };
                 })
@@ -1634,7 +1629,7 @@ namespace TheMurderStoneArchive.Services
                 {
                     EventId = x.Event.Id,
                     Title = x.Event.Title,
-                    County = x.Event.InferredCounty,
+                    Region = x.Event.InferredRegion,
                     NearestDistanceKm = x.NearestDistanceKm,
                     OutlierType = "Geospatially isolated"
                 })
@@ -1697,7 +1692,7 @@ namespace TheMurderStoneArchive.Services
                     return new AlignmentConfidenceItem
                     {
                         ClusterName = c.DisplayName,
-                        County = c.InferredCounty,
+                        Region = c.InferredRegion,
                         Records = c.Events.Count,
                         SpanKm = spanKm,
                         ConfidenceScore = confidence
@@ -2020,7 +2015,7 @@ namespace TheMurderStoneArchive.Services
 
             public string NormalizedLocationName { get; set; } = "unknown";
 
-            public string InferredCounty { get; set; } = "Unknown";
+            public string InferredRegion { get; set; } = "Unknown";
 
             public double? Latitude { get; init; }
 
@@ -2041,7 +2036,7 @@ namespace TheMurderStoneArchive.Services
 
             public required string PatternEvidence { get; set; }
 
-            public string InferredCounty { get; set; } = "Unknown";
+            public string InferredRegion { get; set; } = "Unknown";
 
             public double? CentroidLatitude { get; set; }
 
@@ -2058,39 +2053,7 @@ namespace TheMurderStoneArchive.Services
             ResearchPackNotes
         }
 
-        private static readonly Dictionary<string, string> CountyKeywords = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ["somerset"] = "Somerset",
-            ["devon"] = "Devon",
-            ["dorset"] = "Dorset",
-            ["cornwall"] = "Cornwall",
-            ["wiltshire"] = "Wiltshire",
-            ["hampshire"] = "Hampshire",
-            ["surrey"] = "Surrey",
-            ["kent"] = "Kent",
-            ["sussex"] = "Sussex",
-            ["essex"] = "Essex",
-            ["london"] = "Greater London",
-            ["yorkshire"] = "Yorkshire",
-            ["lancashire"] = "Lancashire"
-        };
-
-        private static readonly Dictionary<string, (double Latitude, double Longitude)> CountyCentroids = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ["Somerset"] = (51.1051, -2.9262),
-            ["Devon"] = (50.7184, -3.5339),
-            ["Dorset"] = (50.7488, -2.3445),
-            ["Cornwall"] = (50.2660, -5.0527),
-            ["Wiltshire"] = (51.3492, -1.9927),
-            ["Hampshire"] = (51.0577, -1.3081),
-            ["Surrey"] = (51.2362, -0.5704),
-            ["Kent"] = (51.2787, 0.5217),
-            ["Sussex"] = (50.9086, -0.4822),
-            ["Essex"] = (51.7356, 0.4685),
-            ["Greater London"] = (51.5072, -0.1276),
-            ["Yorkshire"] = (53.9915, -1.5412),
-            ["Lancashire"] = (53.7632, -2.7044)
-        };
+        // Region keyword and centroid data is shared via RegionData (Helpers/RegionData.cs).
 
         private static readonly Dictionary<string, string[]> TrendKeywords = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -2142,13 +2105,13 @@ namespace TheMurderStoneArchive.Services
         {
             public required List<TemporalAnomaly> TemporalAnomalies { get; init; }
 
-            public required List<CountyShift> SpatioTemporalCountyShifts { get; init; }
+            public required List<RegionShift> SpatioTemporalRegionShifts { get; init; }
 
             public required NearestNeighbourStats NearestNeighbour { get; init; }
 
             public required List<NarrativeEraProfile> NarrativeEvolutionByEra { get; init; }
 
-            public required List<CountyProfile> CountyProfiles { get; init; }
+            public required List<RegionProfile> RegionProfiles { get; init; }
 
             public required List<ProtectionRiskItem> ProtectionRiskScores { get; init; }
 
@@ -2174,9 +2137,9 @@ namespace TheMurderStoneArchive.Services
             public double ZScore { get; init; }
         }
 
-        private sealed class CountyShift
+        private sealed class RegionShift
         {
-            public required string County { get; init; }
+            public required string Region { get; init; }
 
             public int TotalRecords { get; init; }
 
@@ -2211,9 +2174,9 @@ namespace TheMurderStoneArchive.Services
             public required string TopTermsSummary { get; init; }
         }
 
-        private sealed class CountyProfile
+        private sealed class RegionProfile
         {
-            public required string County { get; init; }
+            public required string Region { get; init; }
 
             public int Records { get; init; }
 
@@ -2230,7 +2193,7 @@ namespace TheMurderStoneArchive.Services
 
             public required string Title { get; init; }
 
-            public required string County { get; init; }
+            public required string Region { get; init; }
 
             public double Score { get; init; }
         }
@@ -2252,7 +2215,7 @@ namespace TheMurderStoneArchive.Services
 
             public required string Title { get; init; }
 
-            public required string County { get; init; }
+            public required string Region { get; init; }
 
             public required string OutlierType { get; init; }
 
@@ -2281,7 +2244,7 @@ namespace TheMurderStoneArchive.Services
         {
             public required string ClusterName { get; init; }
 
-            public required string County { get; init; }
+            public required string Region { get; init; }
 
             public int Records { get; init; }
 

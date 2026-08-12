@@ -75,3 +75,4 @@ dkms.conf
 /TheMurderStoneArchive.Tests/bin
 /.github
 /TheMurderStoneArchive/.env.local
+/TheMurderStoneArchive/test-api-monetization.ps1
