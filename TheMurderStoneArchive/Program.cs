@@ -165,6 +165,7 @@ var patreonWebhookSecret = builder.Configuration[$"{AppConstants.DonationSection
 var patreonCampaignUrl = builder.Configuration[$"{AppConstants.DonationSection}:PatreonCampaignUrl"];
 var patreonOneTimePaymentUrl = builder.Configuration[$"{AppConstants.DonationSection}:PatreonOneTimePaymentUrl"];
 var fourthwallOneTimePaymentUrl = builder.Configuration[$"{AppConstants.DonationSection}:FourthwallOneTimePaymentUrl"];
+var fourthwallSubscriptionUrl = builder.Configuration[$"{AppConstants.DonationSection}:FourthwallSubscriptionUrl"];
 var fourthwallWebhookSecret = builder.Configuration[$"{AppConstants.DonationSection}:FourthwallWebhookSecret"];
 
 if (string.Equals(donationProvider, "Patreon", StringComparison.OrdinalIgnoreCase))
@@ -191,6 +192,11 @@ if (string.Equals(donationProvider, "Fourthwall", StringComparison.OrdinalIgnore
     {
         logger.LogWarning("Fourthwall donation provider is enabled but webhook secret is missing. Set Donation__FourthwallWebhookSecret environment variable.");
     }
+}
+
+if (string.IsNullOrWhiteSpace(fourthwallSubscriptionUrl))
+{
+    logger.LogWarning("Fourthwall donation provider is enabled but one-time payment URL is missing. Set Donation__fourthwallSubscriptionUrl environment variable.");
 }
 
 var fourthwallApiSubSecret = builder.Configuration[$"{AppConstants.DonationSection}:FourthwallApiSubscriptionWebhookSecret"];

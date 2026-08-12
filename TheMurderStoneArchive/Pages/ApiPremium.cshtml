@@ -14,7 +14,7 @@
         <div class="col-lg-8">
             <div class="card mb-4">
                 <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">What's Included?</h4>
+                    <h4 class="mb-0 text-white">What's Included?</h4>
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
@@ -51,8 +51,8 @@
             </div>
 
             <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h4 class="mb-0">How It Works</h4>
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0 text-white">How It Works</h4>
                 </div>
                 <div class="card-body">
                     <ol>
@@ -71,22 +71,17 @@
                     </ol>
                 </div>
             </div>
-
-            <div class="alert alert-info" role="alert">
-                <h5>Already have a free API key?</h5>
-                <p class="mb-0">Once you purchase a Premium subscription below, we'll automatically upgrade your existing API key. No need to generate a new one.</p>
-            </div>
         </div>
 
         <div class="col-lg-4">
             <div class="card border-success sticky-top" style="top: 1rem;">
                 <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">Premium Subscriptions</h4>
+                    <h4 class="mb-0 text-white">Premium Subscriptions</h4>
                 </div>
                 <div class="card-body">
                     <div class="text-center mb-4">
                         <h3 class="text-success">$4.99<span class="h6">/month</span></h3>
-                        <small class="text-muted">Cancel anytime • Or save with annual billing</small>
+                        <small class="text-muted">Cancel anytime</small>
                     </div>
 
                     @* Fourthwall subscription embed would go here *@
@@ -94,7 +89,7 @@
                         @if (!string.IsNullOrWhiteSpace(options.FourthwallSubscriptionUrl))
                         {
                             <a href="@options.FourthwallSubscriptionUrl" class="btn btn-lg btn-success">
-                                <strong>Get Premium API Access</strong>
+                                <strong>Upgrade Now</strong>
                             </a>
                             <small class="d-block mt-3 text-muted">Secure checkout via Fourthwall</small>
                         }
@@ -129,7 +124,7 @@
                     </h2>
                     <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            <strong>$4.99 per month</strong>, billed monthly. You can also purchase annually for $49.99/year to save $10. Cancel anytime with no penalties.
+                            <strong>$4.99 per month</strong>, billed monthly. Cancel anytime with no penalties.
                         </div>
                     </div>
                 </div>
@@ -155,7 +150,7 @@
                     </h2>
                     <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            Yes. You can cancel anytime through your Fourthwall account or by contacting us. Your API key will revert to free tier after the current billing period ends.
+                            Yes. You can cancel anytime through your Fourthwall account. Your API key will revert to free tier after the current billing period ends.
                         </div>
                     </div>
                 </div>
@@ -172,28 +167,7 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
-                            Do you offer educational discounts?
-                        </button>
-                    </h2>
-                    <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            For non-profit, academic, or educational use, please <a href="/contact">contact us</a> to discuss options or discounted tiers.
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </div>
-
-@section Scripts {
-    @* 
-    TODO: Add Fourthwall subscription embed script here.
-    Fourthwall provides a subscription widget that can be embedded directly.
-    Configuration: customer email, subscription product ID, webhook URL (/api/v1/webhooks/fourthwall/subscription-activated)
-    *@
-}

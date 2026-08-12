@@ -325,13 +325,13 @@ namespace TheMurderStoneArchive.Controllers
         {
             // Verify reCAPTCHA v3 token (action: submit)
             var token = Request.Form["g-recaptcha-response"].ToString();
-            if (string.IsNullOrEmpty(token) || !await _murderEventService.VerifyReCaptchaAsync(token, "submit"))
+            if (!_env.IsDevelopment() && (string.IsNullOrEmpty(token) || !await _murderEventService.VerifyReCaptchaAsync(token, "submit")))
             {
                 ModelState.AddModelError(string.Empty, "Captcha verification failed. Please try again.");
                 return View(murderEvent);
             }
             // Force public submissions to require moderation
-            murderEvent.IsApproved = false;
+            murderEvent.IsApproved = User.IsInRole("Admin");
 
             const int MaxFiles = 10;
             const long MaxFileSize = 25L * 1024L * 1024L; // 25 MB per file
