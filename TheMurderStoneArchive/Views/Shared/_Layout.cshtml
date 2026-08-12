@@ -1,4 +1,15 @@
-﻿<!DOCTYPE html>
+﻿@{
+    // 1. Grab the current URL path
+    var currentUrl = ViewContext.HttpContext.Request.Path.Value ?? "";
+    
+    // 2. Check if we are on either API page
+    bool isApi = currentUrl.StartsWith("/API/", StringComparison.OrdinalIgnoreCase);
+    
+    // 3. Determine if the parent menu should be open
+    bool isApiMenuExpanded = isApi;
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -74,17 +85,39 @@
                     <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Research Pack
                 </a>
-                <a class="sidebar-link" asp-controller="Home" asp-action="ApiDocs" data-cta="sidebar-api-docs">
-                    <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                    API Docs
+                <a class="d-flex justify-content-between align-items-center text-decoration-none text-white me-3 @(isApiMenuExpanded ? "" : "collapsed")" data-bs-toggle="collapse" href="#apiSubMenu" role="button" aria-expanded="@(isApiMenuExpanded ? "true" : "false")" aria-controls="apiSubMenu">
+                    <span class="sidebar-link-noninteractive d-flex align-items-center gap-2">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                        API
+                    </span>
+                    <svg class="sidebar-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" /></svg>
                 </a>
-                @if (User?.Identity?.IsAuthenticated == true)
-                {
-                    <a class="sidebar-link" asp-page="/MyApiKeys">
-                        <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-                        My API Keys
+                <div class="collapse ps-3 @(isApiMenuExpanded ? "show" : "")" id="apiSubMenu">
+                    <a class="sidebar-link fw-bold @(currentUrl.Contains("API/Premium", StringComparison.OrdinalIgnoreCase) ? "active" : "")" asp-controller="API" asp-action="Premium" data-cta="sidebar-api-premium" style="color:gold">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                        Premium Access
                     </a>
-                }
+                    <hr class="text-white mt-1 mb-1" style="border: none; height: 1px; color: white; background-color: white;"/>
+                    <a class="sidebar-link @(currentUrl.Contains("API/QuickStart", StringComparison.OrdinalIgnoreCase) ? "active" : "")" asp-controller="API" asp-action="QuickStart" data-cta="sidebar-api-quickstart">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
+                        Quick Start
+                    </a>    
+                    <a class="sidebar-link @(currentUrl.Contains("API/Pricing", StringComparison.OrdinalIgnoreCase) ? "active" : "")" asp-controller="API" asp-action="Pricing" data-cta="sidebar-api-pricing">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82zM7 7h.01" /></svg>
+                        Pricing & Tiers
+                    </a>
+                    <a class="sidebar-link @(currentUrl.Contains("API/Reference", StringComparison.OrdinalIgnoreCase) ? "active" : "")" asp-controller="API" asp-action="Reference" data-cta="sidebar-api-reference">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM14 3.5L18.5 8H14V3.5zM8 12h8v2H8v-2zm0 4h8v2H8v-2z" /></svg>
+                        API Reference
+                    </a>
+                    @if (User?.Identity?.IsAuthenticated == true)
+                    {
+                        <a class="sidebar-link @(currentUrl.Contains("API/MyKeys", StringComparison.OrdinalIgnoreCase) ? "active" : "")" asp-controller="API" asp-action="MyKeys">
+                            <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                            My Keys
+                        </a>
+                    }
+                </div>
                 <a class="sidebar-link" asp-controller="Home" asp-action="Funding" data-cta="sidebar-funding">
                     <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     Funding
@@ -149,14 +182,29 @@
 
         (function () {
             var path = location.pathname.replace(/\/$/, '') || '/';
+            var bestMatch = null;
+            var bestLength = -1;
+
             document.querySelectorAll('.sidebar-link').forEach(function (a) {
                 var href = a.getAttribute('href');
                 if (!href) return;
+                
                 var norm = href.replace(/\/$/, '') || '/';
-                if (path === norm || (norm !== '/' && path.startsWith(norm))) {
-                    a.classList.add('active');
+                
+                // 1. Check for exact match OR sub-folder match (ensuring it's a full segment)
+                if (path === norm || (norm !== '/' && path.startsWith(norm + '/'))) {
+                    // 2. If multiple links match, pick the most specific (longest) one
+                    if (norm.length > bestLength) {
+                        bestLength = norm.length;
+                        bestMatch = a;
+                    }
                 }
             });
+
+            // Apply the active class to the winner
+            if (bestMatch) {
+                bestMatch.classList.add('active');
+            }
         })();
     </script>
     @await RenderSectionAsync("Scripts", required: false)

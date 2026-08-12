@@ -1,0 +1,91 @@
+﻿@using TheMurderStoneArchive.Models
+@inject Microsoft.Extensions.Options.IOptions<DonationOptions> DonationOptions
+@{
+    ViewData["Title"] = "API Documentation";
+    var options = DonationOptions.Value;
+}
+
+<div class="container mt-5">
+    <h1>Pricing & Tiers</h1>
+
+    @if (!string.IsNullOrWhiteSpace(options.FourthwallSubscriptionUrl))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>Ready for Production?</strong> <a href="@options.FourthwallSubscriptionUrl" class="alert-link">Upgrade to Premium API Access</a> for just <strong>$4.99/month</strong> — 10,000 requests/month and full data access.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Pricing / Tiers -->
+    <section>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0 text-white">Free Tier</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Perfect for learning and small projects.</p>
+                        <ul class="list-unstyled">
+                            <li>✓ 100 requests/month</li>
+                            <li>✓ Basic event data</li>
+                            <li>✓ Title, year, location, victim count</li>
+                            <li>✗ Descriptions & full details</li>
+                            <li>✗ Analysis & trends</li>
+                        </ul>
+                        <p class="text-muted mt-3"><strong>Forever free.</strong> No credit card required.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0 text-white">Premium Tier</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">For researchers and production uses.</p>
+                        <ul class="list-unstyled">
+                            <li>✓ 10,000 requests/month</li>
+                            <li>✓ All free tier data</li>
+                            <li>✓ Full descriptions & circumstances</li>
+                            <li>✓ Perpetrator & monument details</li>
+                            <li>✓ Analysis API (clusters, trends)</li>
+                        </ul>
+                        <p class="text-muted mt-3"><strong>$4.99/month</strong> • <a href="/api-premium">Subscribe now</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rate Limits -->
+    <section class="mt-5">
+        <h2>Rate Limits & Quotas</h2>
+        <div class="card">
+            <div class="card-body">
+                <table class="table mb-0">
+                    <tr>
+                        <th></th>
+                        <th>Free Tier</th>
+                        <th>Premium Tier</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Monthly requests</strong></td>
+                        <td>100</td>
+                        <td>10,000</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Reset period</strong></td>
+                        <td>Monthly (automatic)</td>
+                        <td>Monthly (automatic)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Response on limit exceeded</strong></td>
+                        <td>HTTP 429 (Too Many Requests)</td>
+                        <td>HTTP 429 (Too Many Requests)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>

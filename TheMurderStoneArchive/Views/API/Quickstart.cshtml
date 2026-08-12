@@ -1,0 +1,34 @@
+﻿@using TheMurderStoneArchive.Models
+@inject Microsoft.Extensions.Options.IOptions<DonationOptions> DonationOptions
+@{
+    ViewData["Title"] = "API Documentation";
+    var options = DonationOptions.Value;
+}
+
+<div class="container mt-5">
+    <h1>Quick Start</h1>
+
+    @if (!string.IsNullOrWhiteSpace(options.FourthwallSubscriptionUrl))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>Ready for Production?</strong> <a href="@options.FourthwallSubscriptionUrl" class="alert-link">Upgrade to Premium API Access</a> for just <strong>$4.99/month</strong> — 10,000 requests/month and full data access.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Quick Start -->
+    <section>
+        <div class="card">
+            <div class="card-body">
+                <h5>1. Generate an API Key</h5>
+                <p><a href="/api/my-keys">Create a free API key</a> to start using the API.</p>
+
+                <h5 class="mt-4">2. Make a Request</h5>
+                <pre><code>curl -H "X-Api-Key: your_api_key" "https://themurderstonearchive.com/api/v1/events"</code></pre>
+
+                <h5 class="mt-4">3. Parse the Response</h5>
+                <p>The API returns JSON. Free tier includes basic data; premium includes full details.</p>
+            </div>
+        </div>
+    </section>
+</div>

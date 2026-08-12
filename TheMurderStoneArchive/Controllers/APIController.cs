@@ -1,25 +1,23 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Security.Claims;
 using TheMurderStoneArchive.Helpers;
 using TheMurderStoneArchive.Models;
 using TheMurderStoneArchive.Services;
 
-namespace TheMurderStoneArchive.Pages
+namespace TheMurderStoneArchive.Controllers
 {
-    [Authorize]
-    public class MyApiKeysModel : PageModel
+    public class APIController : Controller
     {
         private readonly IApiAuthenticationService _authService;
-        private readonly ILogger<MyApiKeysModel> _logger;
+        private readonly ILogger<APIController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IWebHostEnvironment _environment;
 
-        public MyApiKeysModel(
+        public APIController(
             IApiAuthenticationService authService,
-            ILogger<MyApiKeysModel> logger,
+            ILogger<APIController> logger,
             IConfiguration configuration,
             IHttpClientFactory httpClientFactory,
             IWebHostEnvironment environment)
@@ -31,23 +29,53 @@ namespace TheMurderStoneArchive.Pages
             _environment = environment;
         }
 
-        public List<ApiKey>? ApiKeys { get; set; }
-        public string ReCaptchaSiteKey => _configuration[AppConstants.ReCaptchaSiteKeyKey] ?? string.Empty;
-
         [TempData] public string? GeneratedKeyMessage { get; set; }
         [TempData] public string? SuccessMessage { get; set; }
         [TempData] public string? ErrorMessage { get; set; }
 
-        public async Task OnGetAsync()
+        [HttpGet]
+        public IActionResult Premium()
         {
+            return View();
+        }
+
+        public IActionResult Pricing()
+        {
+            return View();
+        }
+
+        public IActionResult QuickStart()
+        {
+            return View();
+        }
+
+        public IActionResult Reference()
+        {
+            return View();
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> MyKeys()
+        {
+            var model = new MyKeysViewModel
+            {
+                ReCaptchaSiteKey = _configuration[AppConstants.ReCaptchaSiteKeyKey] ?? string.Empty
+            };
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId != null)
-                ApiKeys = (await _authService.GetUserApiKeysAsync(userId)).ToList();
+            {
+                model.ApiKeys = (await _authService.GetUserApiKeysAsync(userId)).ToList();
+            }
+
+            return View(model);
         }
 
         // ── JSON endpoints for fetch-based UI ──────────────────────────────
 
-        public async Task<IActionResult> OnPostGenerateKeyJsonAsync([FromBody] GenerateKeyRequest? body)
+        [HttpPost]
+        public async Task<IActionResult> GenerateKeyJson([FromBody] GenerateKeyRequest? body)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
@@ -95,7 +123,8 @@ namespace TheMurderStoneArchive.Pages
             }
         }
 
-        public async Task<IActionResult> OnPostRevokeKeyJsonAsync([FromBody] RevokeKeyRequest? body)
+        [HttpPost]
+        public async Task<IActionResult> RevokeKeyJson([FromBody] RevokeKeyRequest? body)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
@@ -119,7 +148,6 @@ namespace TheMurderStoneArchive.Pages
                 _logger.LogInformation("User {UserId} revoked API key: {KeyId}", userId, body.ApiKeyId);
 
                 // If the revoked key had an active premium subscription, automatically issue a replacement
-                // so the user is never locked out of access they paid for.
                 if (revoked.Tier == ApiKeyTier.Premium &&
                     revoked.SubscriptionExpiresAtUtc.HasValue &&
                     revoked.SubscriptionExpiresAtUtc.Value > DateTime.UtcNow)
@@ -128,6 +156,7 @@ namespace TheMurderStoneArchive.Pages
                     var (rawKey, newKey) = await _authService.GenerateApiKeyAsync(userId, replacementName, ApiKeyTier.Premium);
                     await _authService.UpgradeToPremiumpAsync(newKey, revoked.SubscriptionId ?? 0, revoked.SubscriptionExpiresAtUtc.Value);
                     _logger.LogInformation("Auto-reissued premium key {NewKeyId} after revoke of {OldKeyId} for user {UserId}", newKey.Id, body.ApiKeyId, userId);
+
                     return new JsonResult(new
                     {
                         success = true,
@@ -159,7 +188,8 @@ namespace TheMurderStoneArchive.Pages
 
         // ── Fallback PRG handlers (non-JS) ─────────────────────────────────
 
-        public async Task<IActionResult> OnPostGenerateKeyAsync(string? keyName)
+        [HttpPost]
+        public async Task<IActionResult> GenerateKey(string? keyName)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
@@ -181,10 +211,11 @@ namespace TheMurderStoneArchive.Pages
                 ErrorMessage = "An error occurred while generating the API key. Please try again.";
             }
 
-            return RedirectToPage();
+            return RedirectToAction(nameof(MyKeys));
         }
 
-        public async Task<IActionResult> OnPostRevokeKeyAsync(int apiKeyId)
+        [HttpPost]
+        public async Task<IActionResult> RevokeKey(int apiKeyId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
@@ -209,6 +240,7 @@ namespace TheMurderStoneArchive.Pages
                         var (rawKey, newKey) = await _authService.GenerateApiKeyAsync(userId, replacementName, ApiKeyTier.Premium);
                         await _authService.UpgradeToPremiumpAsync(newKey, revoked.SubscriptionId ?? 0, revoked.SubscriptionExpiresAtUtc.Value);
                         _logger.LogInformation("Auto-reissued premium key {NewKeyId} after revoke of {OldKeyId} for user {UserId}", newKey.Id, apiKeyId, userId);
+
                         GeneratedKeyMessage = rawKey;
                         SuccessMessage = "Premium key revoked and a new one has been issued — copy it now, you won't see it again!";
                     }
@@ -224,7 +256,7 @@ namespace TheMurderStoneArchive.Pages
                 ErrorMessage = "An error occurred while revoking the API key.";
             }
 
-            return RedirectToPage();
+            return RedirectToAction(nameof(MyKeys));
         }
 
         // ── reCAPTCHA helper ───────────────────────────────────────────────────
@@ -235,26 +267,33 @@ namespace TheMurderStoneArchive.Pages
             {
                 var secret = _configuration[AppConstants.ReCaptchaSecretKeyKey];
                 if (string.IsNullOrEmpty(secret)) return false;
+
                 var client = _httpClientFactory.CreateClient();
                 var content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
                     { "secret",   secret },
                     { "response", token  }
                 });
+
                 var resp = await client.PostAsync(AppConstants.ReCaptchaVerifyUrl, content);
                 if (!resp.IsSuccessStatusCode) return false;
+
                 var json = await resp.Content.ReadAsStringAsync();
                 using var doc = System.Text.Json.JsonDocument.Parse(json);
+
                 if (!doc.RootElement.TryGetProperty("success", out var success) || !success.GetBoolean())
                     return false;
+
                 if (doc.RootElement.TryGetProperty("score", out var scoreElem) &&
                     scoreElem.ValueKind == System.Text.Json.JsonValueKind.Number &&
                     scoreElem.GetDouble() < minScore)
                     return false;
+
                 if (!string.IsNullOrEmpty(expectedAction) &&
                     doc.RootElement.TryGetProperty("action", out var actionElem) &&
                     !string.Equals(actionElem.GetString(), expectedAction, StringComparison.OrdinalIgnoreCase))
                     return false;
+
                 return true;
             }
             catch
@@ -264,6 +303,7 @@ namespace TheMurderStoneArchive.Pages
         }
     }
 
+    // Move to their own files ideally, but keeping them here for mapping
     public class GenerateKeyRequest
     {
         public string? KeyName { get; set; }
@@ -274,5 +314,11 @@ namespace TheMurderStoneArchive.Pages
     {
         public int ApiKeyId { get; set; }
         public string? RecaptchaToken { get; set; }
+    }
+
+    public class MyKeysViewModel
+    {
+        public List<ApiKey> ApiKeys { get; set; } = new List<ApiKey>();
+        public string ReCaptchaSiteKey { get; set; } = string.Empty;
     }
 }

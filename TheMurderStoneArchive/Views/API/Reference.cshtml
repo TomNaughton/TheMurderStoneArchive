@@ -1,0 +1,438 @@
+﻿@{
+    ViewData["Title"] = "API Reference";
+}
+
+@* Add a popular Highlight.js theme for syntax coloring *@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+
+<style>
+    /* Sticky sidebar styling */
+    .api-sidebar {
+        position: sticky;
+        top: 2rem;
+        height: calc(100vh - 4rem);
+        overflow-y: auto;
+    }
+
+        .api-sidebar .nav-link {
+            color: #495057;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+        }
+
+            .api-sidebar .nav-link.active {
+                background-color: #e9ecef;
+                color: #0d6efd;
+            }
+
+    .code-container {
+        background-color: #282c34;
+        border-radius: 0.375rem;
+        overflow: hidden;
+    }
+
+        .code-container .nav-tabs {
+            border-bottom: 1px solid #444;
+            background-color: #21252b;
+        }
+
+        .code-container .nav-link {
+            color: #abb2bf;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+            .code-container .nav-link.active {
+                background-color: #282c34;
+                color: #61afef;
+                border-bottom: 2px solid #61afef;
+            }
+
+        .code-container pre {
+            margin: 0;
+            padding: 1rem;
+            background: transparent !important;
+        }
+
+    /* Method badges */
+    .badge-get {
+        background-color: #61affe;
+        color: #fff;
+    }
+
+    /* Force code blocks to use the Atom One Dark text color and override global styles */
+    .code-container pre,
+    .code-container code {
+        color: #abb2bf !important;
+        background: transparent !important;
+    }
+
+    /* Ensure specific Highlight.js token tokens aren't flattened to black */
+    .code-container .hljs-keyword,
+    .code-container .hljs-selector-tag,
+    .code-container .hljs-subst {
+        color: #c678dd !important; /* Purple for keywords */
+    }
+
+    .code-container .hljs-string,
+    .code-container .hljs-title,
+    .code-container .hljs-section,
+    .code-container .hljs-attribute,
+    .code-container .hljs-literal,
+    .code-container .hljs-template-tag,
+    .code-container .hljs-template-variable,
+    .code-container .hljs-type,
+    .code-container .hljs-addition {
+        color: #98c379 !important; /* Green for strings/values */
+    }
+
+    .code-container .hljs-comment,
+    .code-container .hljs-quote,
+    .code-container .hljs-deletion,
+    .code-container .hljs-meta {
+        color: #5c6370 !important; /* Gray for comments */
+    }
+
+    .code-container .hljs-number,
+    .code-container .hljs-regexp,
+    .code-container .hljs-link {
+        color: #d19a66 !important; /* Orange for numbers */
+    }
+</style>
+
+<div class="container">
+    <div class="row">
+
+        <!-- Left Sidebar Navigation (Scrollspy target) -->
+        @* <div class="col-lg-3 d-none d-lg-block">
+            <nav id="api-toc" class="api-sidebar flex-column nav nav-pills">
+                <a class="nav-link" href="#introduction">Introduction</a>
+                <a class="nav-link" href="#authentication">Authentication</a>
+                <a class="nav-link" href="#rate-limits">Rate Limits</a>
+                <hr class="w-100 my-2 text-muted">
+                <span class="ps-3 text-uppercase text-muted small fw-bold mb-2 mt-2">Endpoints</span>
+                <a class="nav-link" href="#list-events">List Events</a>
+                <a class="nav-link" href="#search-events">Search Events</a>
+                <a class="nav-link" href="#get-event">Get Single Event</a>
+                <a class="nav-link" href="#get-analysis">Get Analysis</a>
+                <hr class="w-100 my-2 text-muted">
+                <a class="nav-link" href="#response-format">Response Format</a>
+            </nav>
+        </div> *@
+
+        <!-- Main Content Area -->
+        @* <div class="col-lg-9" data-bs-spy="scroll" data-bs-target="#api-toc" data-bs-smooth-scroll="true" tabindex="0"> *@
+        <div class="col-lg-12" data-bs-spy="scroll" data-bs-target="#api-toc" data-bs-smooth-scroll="true" tabindex="0">
+
+            <h1 class="mb-3">API Reference</h1>
+
+            <section id="introduction" class="mb-5 pt-3">
+                <p class="lead">Welcome to the Murder Stone Archive API. This RESTful API allows you to programmatically access historical murder stone events, geographical data, and aggregated analysis.</p>
+                <p>Base URL: <code>https://themurderstonearchive.com/api/v1</code></p>
+            </section>
+
+            <section id="authentication" class="mb-5 pt-3">
+                <h2>Authentication</h2>
+                <p>Authenticate your API requests by including your API key in the request headers.</p>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <table class="table table-sm mb-0">
+                            <tr>
+                                <td class="fw-bold"><code>X-Api-Key</code></td>
+                                <td>Required</td>
+                                <td>Your secret API key. Do not share this in client-side code.</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <hr class="my-5" />
+
+            <!-- Endpoints -->
+            <h2 class="mb-4">Endpoints</h2>
+
+            <!-- 1. List Events -->
+            <section id="list-events" class="mb-5 pt-3">
+                <h4><span class="badge badge-get me-2">GET</span> /events</h4>
+                <p>List all murder stone events with pagination.</p>
+
+                <h6 class="mt-4 fw-bold">Query Parameters</h6>
+                <div class="card mb-4">
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light">
+                                <tr><th class="ps-3">Parameter</th><th>Type</th><th>Description</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="ps-3"><code>pageNumber</code></td>
+                                    <td><code>int</code></td>
+                                    <td>Optional. Page number (default: 1).</td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-3"><code>pageSize</code></td>
+                                    <td><code>int</code></td>
+                                    <td>Optional. Results per page, max 500 (default: 50).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="code-container shadow-sm">
+                    <ul class="nav nav-tabs" id="listTabs" role="tablist">
+                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#list-curl">cURL</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#list-js">JavaScript</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#list-cs">C#</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#list-py">Python</button></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="list-curl">
+                            <pre><code class="language-bash">curl -X GET "https://themurderstonearchive.com/api/v1/events?pageNumber=1&pageSize=20" \
+  -H "X-Api-Key: YOUR_API_KEY"</code></pre>
+                        </div>
+                        <div class="tab-pane fade" id="list-js">
+                            <pre><code class="language-javascript">fetch('https://themurderstonearchive.com/api/v1/events?pageNumber=1&pageSize=20', {
+  headers: {
+    'X-Api-Key': 'YOUR_API_KEY'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="tab-pane fade" id="list-cs">
+                            <pre><code class="language-csharp">using var client = new HttpClient();
+client.DefaultRequestHeaders.Add("X-Api-Key", "YOUR_API_KEY");
+
+var response = await client.GetAsync("https://themurderstonearchive.com/api/v1/events?pageNumber=1&pageSize=20");
+var content = await response.Content.ReadAsStringAsync();</code></pre>
+                        </div>
+                        <div class="tab-pane fade" id="list-py">
+                            <pre><code class="language-python">import requests
+
+url = "https://themurderstonearchive.com/api/v1/events?pageNumber=1&pageSize=20"
+headers = {"X-Api-Key": "YOUR_API_KEY"}
+
+response = requests.get(url, headers=headers)
+print(response.json())</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Search Events -->
+            <section id="search-events" class="mb-5 pt-3">
+                <h4><span class="badge badge-get me-2">GET</span> /events/search</h4>
+                <p>Search for events by title, description, or location.</p>
+
+                <h6 class="mt-4 fw-bold">Query Parameters</h6>
+                <div class="card mb-4">
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light">
+                                <tr><th class="ps-3">Parameter</th><th>Type</th><th>Description</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="ps-3"><code>query</code></td>
+                                    <td><code>string</code></td>
+                                    <td>Required. Search term (min 2 characters).</td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-3"><code>pageNumber</code></td>
+                                    <td><code>int</code></td>
+                                    <td>Optional. Page number (default: 1).</td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-3"><code>pageSize</code></td>
+                                    <td><code>int</code></td>
+                                    <td>Optional. Results per page (default: 50).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="code-container shadow-sm">
+                    <ul class="nav nav-tabs" id="searchTabs" role="tablist">
+                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#search-curl">cURL</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#search-js">JavaScript</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#search-cs">C#</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#search-py">Python</button></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="search-curl">
+                            <pre><code class="language-bash">curl -X GET "https://themurderstonearchive.com/api/v1/events/search?query=Scotland" \
+  -H "X-Api-Key: YOUR_API_KEY"</code></pre>
+                        </div>
+                        <div class="tab-pane fade" id="search-js">
+                            <pre><code class="language-javascript">fetch('https://themurderstonearchive.com/api/v1/events/search?query=Scotland', {
+  headers: { 'X-Api-Key': 'YOUR_API_KEY' }
+}).then(res => res.json());</code></pre>
+                        </div>
+                        <div class="tab-pane fade" id="search-cs">
+                            <pre><code class="language-csharp">using var client = new HttpClient();
+client.DefaultRequestHeaders.Add("X-Api-Key", "YOUR_API_KEY");
+var response = await client.GetAsync("https://themurderstonearchive.com/api/v1/events/search?query=Scotland");</code></pre>
+                        </div>
+                        <div class="tab-pane fade" id="search-py">
+                            <pre><code class="language-python">import requests
+headers = {"X-Api-Key": "YOUR_API_KEY"}
+res = requests.get("https://themurderstonearchive.com/api/v1/events/search?query=Scotland", headers=headers)</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Get Single Event -->
+            <section id="get-event" class="mb-5 pt-3">
+                <h4><span class="badge badge-get me-2">GET</span> /events/{id}</h4>
+                <p>Get a single event by ID.</p>
+
+                <h6 class="mt-4 fw-bold">Path Parameters</h6>
+                <div class="card mb-4">
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light">
+                                <tr><th class="ps-3">Parameter</th><th>Type</th><th>Description</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="ps-3"><code>id</code></td>
+                                    <td><code>int</code></td>
+                                    <td>Required. The unique identifier of the event.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="code-container shadow-sm">
+                    <ul class="nav nav-tabs" id="singleTabs" role="tablist">
+                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#single-curl">cURL</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#single-js">JavaScript</button></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="single-curl">
+                            <pre><code class="language-bash">curl -X GET "https://themurderstonearchive.com/api/v1/events/42" \
+  -H "X-Api-Key: YOUR_API_KEY"</code></pre>
+                        </div>
+                        <div class="tab-pane fade" id="single-js">
+                            <pre><code class="language-javascript">fetch('https://themurderstonearchive.com/api/v1/events/42', {
+  headers: { 'X-Api-Key': 'YOUR_API_KEY' }
+}).then(res => res.json());</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Get Analysis -->
+            <section id="get-analysis" class="mb-5 pt-3">
+                <h4><span class="badge badge-get me-2">GET</span> /events/analysis</h4>
+                <p><strong><span class="text-warning">★ Premium only.</span></strong> Get aggregated analysis (clusters, trends, region insights).</p>
+
+                <div class="code-container shadow-sm mt-4">
+                    <ul class="nav nav-tabs" id="analysisTabs" role="tablist">
+                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#analysis-curl">cURL</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis-js">JavaScript</button></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="analysis-curl">
+                            <pre><code class="language-bash">curl -X GET "https://themurderstonearchive.com/api/v1/events/analysis" \
+  -H "X-Api-Key: YOUR_PREMIUM_KEY"</code></pre>
+                        </div>
+                        <div class="tab-pane fade" id="analysis-js">
+                            <pre><code class="language-javascript">fetch('https://themurderstonearchive.com/api/v1/events/analysis', {
+  headers: { 'X-Api-Key': 'YOUR_PREMIUM_KEY' }
+}).then(res => res.json());</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <hr class="my-5" />
+
+            <!-- Response Format -->
+            <section id="response-format" class="mb-5 pt-3">
+                <h2>Response Format</h2>
+                <p>All endpoints return data in JSON format. A standard success response looks like this:</p>
+
+                <div class="code-container shadow-sm mb-4">
+                    <pre><code class="language-json">{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "title": "Stone of the Murdered Maiden",
+      "year": 1650,
+      "location": {
+        "id": 1,
+        "name": "Perthshire, Scotland",
+        "latitude": 56.89,
+        "longitude": -3.51
+      },
+      "victimCount": 1
+    }
+  ],
+  "totalCount": 125,
+  "pageNumber": 1,
+  "pageSize": 50,
+  "message": null
+}</code></pre>
+                </div>
+
+                <p>A standard error response (e.g., HTTP 401 Unauthorized or HTTP 429 Too Many Requests):</p>
+                <div class="code-container shadow-sm">
+                    <pre><code class="language-json">{
+  "success": false,
+  "message": "Invalid or revoked API key",
+  "errorCode": "INVALID_API_KEY"
+}</code></pre>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Highlight.js Core Stylesheet -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+
+    <!-- Highlight.js Core Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <!-- Language Packs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/csharp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Highlight all visible code blocks on initial page load
+            hljs.highlightAll();
+
+            // 2. Dynamically highlight code blocks when switching tabs
+            const tabButtons = document.querySelectorAll('.code-container .nav-tabs button');
+            tabButtons.forEach(button => {
+                button.addEventListener('shown.bs.tab', event => {
+                    const targetSelector = event.target.getAttribute('data-bs-target');
+                    const targetPane = document.querySelector(targetSelector);
+
+                    if (targetPane) {
+                        targetPane.querySelectorAll('pre code').forEach(block => {
+                            // Highlight if not already highlighted
+                            if (!block.dataset.highlighted) {
+                                hljs.highlightElement(block);
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

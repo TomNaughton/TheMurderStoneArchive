@@ -19,7 +19,7 @@ namespace TheMurderStoneArchive.Middleware
             // Content Security Policy - restrict resources to same origin + necessary CDNs for maps and libraries
             context.Response.Headers.Append("Content-Security-Policy",
                 "default-src 'self'; " +
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://www.google.com https://www.gstatic.com; " +
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://www.google.com https://www.gstatic.com https://cdnjs.cloudflare.com; " +
                 "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com; " +
                 "font-src 'self' https://fonts.gstatic.com; " +
                 "img-src 'self' data: https: blob:; " +

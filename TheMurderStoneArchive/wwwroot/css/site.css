@@ -1,5 +1,6 @@
 html {
     font-size: 15px;
+    scroll-behavior: smooth;
 }
 
 @media (min-width: 768px) {
@@ -134,6 +135,20 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    margin: 1px 8px;
+    transition: background 140ms ease, color 140ms ease;
+    cursor: pointer;
+}
+
+.sidebar-link-noninteractive {
     display: flex;
     align-items: center;
     gap: 10px;
