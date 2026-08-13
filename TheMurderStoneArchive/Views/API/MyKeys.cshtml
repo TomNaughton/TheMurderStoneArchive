@@ -239,6 +239,8 @@
     </div>
 </div>
 
+@await Html.PartialAsync("_PromoModal")
+
 @section Scripts {
     <script src="https://www.google.com/recaptcha/api.js?render=@Model.ReCaptchaSiteKey" async defer></script>
     <script>

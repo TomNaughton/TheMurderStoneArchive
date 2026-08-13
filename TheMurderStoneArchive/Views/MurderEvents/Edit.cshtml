@@ -13,6 +13,8 @@
                 <div asp-validation-summary="All" class="text-danger"></div>
 
                 <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="LocationId" />
+                <input type="hidden" asp-for="Location.Id" />
 
                 <div class="mb-3">
                     <label asp-for="Title" class="control-label">Stone / Event Title</label>

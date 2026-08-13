@@ -12,6 +12,15 @@ using TheMurderStoneArchive.Models;
 using TheMurderStoneArchive.Services;
 using TheMurderStoneArchive.Validators;
 
+// ASP.NET Core's DefaultModelMetadataProvider recursively builds metadata for every public
+// property of a type. NTS Geometry has deeply nested properties (Boundary → Geometry →
+// Boundary → ...) that exhaust the stack before the cycle guard fires. Registering a
+// TypeConverter that handles strings makes Geometry appear as a "simple scalar" to the
+// metadata system, so it stops enumerating its child properties entirely.
+System.ComponentModel.TypeDescriptor.AddAttributes(
+    typeof(NetTopologySuite.Geometries.Geometry),
+    new System.ComponentModel.TypeConverterAttribute(typeof(NtsGeometryTypeConverter)));
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Load .env file into environment variables.
@@ -61,7 +70,12 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString(AppConstants.ConnectionStringKey)));
+    options
+        .UseNpgsql(
+            builder.Configuration.GetConnectionString(AppConstants.ConnectionStringKey),
+            o => o.UseNetTopologySuite())
+        .ConfigureWarnings(warnings =>
+            warnings.Log(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
 // Persist Data Protection keys to the database so they survive container restarts
 builder.Services.AddDataProtection()

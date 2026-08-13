@@ -76,3 +76,6 @@ dkms.conf
 /.github
 /TheMurderStoneArchive/.env.local
 /TheMurderStoneArchive/test-api-monetization.ps1
+/TheMurderStoneArchive/.vs/TheMurderStoneArchive/CopilotIndices/18.8.1106.51376
+/TheMurderStoneArchive/.tmp-murder-stone-archive.tar105280695
+/TheMurderStoneArchive/build.log

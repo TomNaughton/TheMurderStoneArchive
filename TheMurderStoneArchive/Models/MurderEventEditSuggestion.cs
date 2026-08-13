@@ -23,6 +23,7 @@ namespace TheMurderStoneArchive.Models
         [ValidateNever]
         public MurderEvent MurderEvent { get; set; } = null!;
 
+        [ValidateNever]
         public string SubmittedById { get; set; } = string.Empty;
 
         [ValidateNever]

@@ -24,7 +24,7 @@ namespace TheMurderStoneArchive.Middleware
                 "font-src 'self' https://fonts.gstatic.com; " +
                 "img-src 'self' data: https: blob:; " +
                 "frame-src 'self' https://www.youtube.com https://www.google.com https://recaptcha.google.com; " +
-                "connect-src 'self' https://www.google.com/recaptcha https://www.gstatic.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org; " +
+                "connect-src 'self' https://www.google.com/recaptcha https://www.gstatic.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://themurderstonearchive.goatcounter.com https://unpkg.com;" +
                 "tile-layer data: https:;");
 
             // X-Content-Type-Options - prevent MIME type sniffing

@@ -138,6 +138,7 @@ namespace TheMurderStoneArchive.Services
             var providedHash = HashKey(providedKey);
             var apiKey = await _context.ApiKeys
                 .Include(k => k.Subscription)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(k => k.KeyHash == providedHash);
 
             if (apiKey == null)
@@ -265,11 +266,22 @@ namespace TheMurderStoneArchive.Services
         /// </summary>
         private string HashKey(string key)
         {
-            using (var sha256 = SHA256.Create())
-            {
-                var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(key));
-                return Convert.ToHexString(hash).ToLower();
-            }
+            byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(key));
+            return Convert.ToHexString(hashBytes).ToLower();
+        }
+
+        public bool ValidateApiKey(string incomingKey, string storedDbHash)
+        {
+            // 1. Hash the incoming key
+            string incomingHash = HashKey(incomingKey);
+
+            // 2. Convert both hex strings back to bytes for comparison
+            // (Or compare them directly if you store them as byte arrays in the DB)
+            byte[] incomingBytes = Encoding.UTF8.GetBytes(incomingHash);
+            byte[] storedBytes = Encoding.UTF8.GetBytes(storedDbHash);
+
+            // 3. Compare in constant time
+            return CryptographicOperations.FixedTimeEquals(incomingBytes, storedBytes);
         }
     }
 }

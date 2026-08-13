@@ -1,0 +1,94 @@
+﻿@inject Microsoft.Extensions.Options.IOptions<DonationOptions> DonationOptions
+
+@{
+    var options = DonationOptions.Value;
+}
+
+@if (!string.IsNullOrWhiteSpace(options.FourthwallSubscriptionUrl))
+{
+    <!-- Premium Discount Modal -->
+    <div class="modal fade" id="promoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="promoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-success shadow-lg">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold text-white" id="promoModalLabel">✨ Special Summer Offer!</h5>
+                    <!-- Added ID and disabled attribute -->
+                    <button type="button" class="btn-close btn-close-white" id="promoCloseBtn" data-bs-dismiss="modal" aria-label="Close" disabled></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <p class="lead mb-4">Get started with Premium API access today and save on your subscription.</p>
+
+                    <div class="p-3 bg-light border border-success border-opacity-50 rounded mb-3">
+                        <span class="text-muted d-block mb-2 small text-uppercase fw-semibold">Use discount code at checkout:</span>
+                        <div class="d-flex justify-content-center align-items-center gap-2">
+                            <code class="fs-2 fw-bold text-success user-select-all" id="discountCodeText">SUMMER2026</code>
+                            <button class="btn btn-outline-success btn-sm fw-bold" onclick="copyPromoCode(this)">Copy</button>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-0">Valid for the first month of any Premium API tier. Then regular pricing applies.</p>
+                </div>
+                <div class="modal-footer justify-content-center bg-light">
+                    <a href="@options.FourthwallSubscriptionUrl" class="btn btn-success px-4 py-2 fw-bold">Upgrade to Premium Now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        if (!sessionStorage.getItem('promoModalShown')) {
+
+        // Show modal after 1.5 seconds
+        setTimeout(function() {
+        const promoModalEl = document.getElementById('promoModal');
+        const closeBtn = document.getElementById('promoCloseBtn');
+
+        if (promoModalEl) {
+        const promoModal = new bootstrap.Modal(promoModalEl);
+        let canClose = false;
+
+        // 1. Intercept the close event
+        promoModalEl.addEventListener('hide.bs.modal', function(event) {
+        if (!canClose) {
+        // Cancel the close action if 3 seconds haven't passed
+        event.preventDefault();
+        }
+        });
+
+        promoModal.show();
+        sessionStorage.setItem('promoModalShown', 'true');
+
+        // 2. Unlock the modal and enable the close button after 3 seconds
+        setTimeout(function() {
+        canClose = true;
+        if (closeBtn) {
+        closeBtn.removeAttribute('disabled');
+        }
+        }, 3000);
+        }
+        }, 3000);
+
+        }
+        });
+
+        // Copy functionality remains the same
+        function copyPromoCode(btn) {
+        const code = document.getElementById('discountCodeText').innerText;
+
+        navigator.clipboard.writeText(code).then(() => {
+        const originalText = btn.innerText;
+
+        btn.innerText = '✓ Copied!';
+        btn.classList.remove('btn-outline-success');
+        btn.classList.add('btn-success');
+
+        setTimeout(() => {
+        btn.innerText = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-success');
+        }, 2500);
+        }).catch(err => {
+        console.error('Failed to copy text: ', err);
+        });
+        }
+    </script>
+}

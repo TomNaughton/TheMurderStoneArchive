@@ -1,4 +1,1 @@
-<Solution>
-  <Project Path="../TheMurderStoneArchive.Tests/TheMurderStoneArchive.Tests.csproj" />
-  <Project Path="TheMurderStoneArchive.csproj" />
-</Solution>
+<Solution><Project Path="../TheMurderStoneArchive.Tests/TheMurderStoneArchive.Tests.csproj" /><Project Path="TheMurderStoneArchive.csproj" /></Solution>

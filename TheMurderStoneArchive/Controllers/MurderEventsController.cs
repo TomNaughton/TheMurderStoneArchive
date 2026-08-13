@@ -253,11 +253,11 @@ namespace TheMurderStoneArchive.Controllers
                         var youtubeList = YouTubeLinks.Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
                         await YouTubeVideoHelper.ProcessYouTubeLinksAsync(_context, id, youtubeList, _murderEventService.ExtractYouTubeId);
                     }
-                    else
-                    {
-                        // Persist all pending changes (deletions, updates, new photos) in a single transaction
-                        await _context.SaveChangesAsync();
-                    }
+
+                    // Persist all pending changes (deletions, updates, new photos) in a single transaction.
+                    // SaveChangesAsync inside ProcessYouTubeLinksAsync may not fire when no video changes
+                    // are needed, so we always save here to guarantee all other changes are committed.
+                    await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {

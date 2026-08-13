@@ -43,6 +43,22 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+<!-- Leaflet.markercluster — groups nearby pins into a single count bubble -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<style>
+    /* Coloured pin icons used in place of plain circle markers */
+    .map-pin {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 1px 4px rgba(0,0,0,.45);
+    }
+</style>
+
 <script>
     // 1. Clean up existing map instance if reloading in DOM to prevent re-init errors
     if (window.myArchiveMap) {
@@ -64,64 +80,66 @@
     // 3. Receive the serialized database records from C# (emit as a JS object literal)
     const murderEvents = @Html.Raw(jsonModel);
 
-    let markerReferences = [];
+    // Category metadata — colour and display name keyed by enum int value
+    const CATEGORY_META = {
+        0: { color: '#dc3545', name: 'Confirmed Murder Stone'  },
+        1: { color: '#ffc107', name: 'Folkloric / Legend'       },
+        2: { color: '#6c757d', name: 'Pudding Stone'            },
+        3: { color: '#198754', name: 'Boundary Marker'          }
+    };
 
-    // Helper function to pick marker color based on category enum value
-    function getMarkerColor(category) {
-        switch (category) {
-            case 0: return '#dc3545'; // Confirmed (Red)
-            case 1: return '#ffc107'; // Folkloric (Yellow/Amber)
-            case 2: return '#6c757d'; // PuddingStone (Grey)
-            case 3: return '#198754'; // BoundaryMarker (Green)
-            default: return '#0d6efd'; // Default Blue
-        }
+    // 4. One MarkerClusterGroup per category so the filter can add/remove whole groups
+    const clusterGroups = {};
+    Object.keys(CATEGORY_META).forEach(cat => {
+        clusterGroups[cat] = L.markerClusterGroup({ chunkedLoading: true });
+        map.addLayer(clusterGroups[cat]);
+    });
+
+    // Helper — build a coloured DivIcon that keeps the category colour coding
+    function makePinIcon(color) {
+        return L.divIcon({
+            className: '',
+            html: `<div class="map-pin" style="background:${color};"></div>`,
+            iconSize:   [14, 14],
+            iconAnchor: [7,  7],
+            popupAnchor:[0, -10]
+        });
     }
 
-    // 4. Loop through database events and place map markers
+    // 5. Loop through database events and place markers into their cluster group
     murderEvents.forEach(item => {
         if (item.location && item.location.latitude && item.location.longitude) {
-            const markerColor = getMarkerColor(item.category);
-            
-            const circleMarker = L.circleMarker([item.location.latitude, item.location.longitude], {
-                radius: 8,
-                fillColor: markerColor,
-                color: '#fff',
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.8
-            }).addTo(map);
+            const meta   = CATEGORY_META[item.category] ?? { color: '#0d6efd', name: 'Unknown' };
+            const marker = L.marker(
+                [item.location.latitude, item.location.longitude],
+                { icon: makePinIcon(meta.color) }
+            );
 
-            let categoryName = 'Unknown';
-            if (item.category === 0) categoryName = 'Confirmed Murder Stone';
-            else if (item.category === 1) categoryName = 'Folkloric / Legend';
-            else if (item.category === 2) categoryName = 'Pudding Stone';
-            else if (item.category === 3) categoryName = 'Boundary Marker';
-
-            circleMarker.bindPopup(`
+            marker.bindPopup(`
                 <div>
                     <h5>${item.title}</h5>
                     <p class="m-0"><strong>Year:</strong> ${item.year}</p>
                     <p class="m-0"><strong>Location:</strong> ${item.location.name || 'N/A'}</p>
-                    <p class="m-0 text-muted"><em>Category: ${categoryName}</em></p>
+                    <p class="m-0 text-muted"><em>Category: ${meta.name}</em></p>
                     <a class="btn btn-primary btn-sm mt-2 text-white w-100" href="/MurderEvents/Details/${item.id}">More Info</a>
                 </div>
             `);
 
-            markerReferences.push({ marker: circleMarker, category: item.category });
+            const groupKey = item.category.toString();
+            if (clusterGroups[groupKey]) {
+                clusterGroups[groupKey].addLayer(marker);
+            }
         }
     });
 
-    // 5. Filter function triggered when dropdown selection changes
+    // 6. Filter — show only the selected category's cluster group (or all)
     function filterMarkers(selectedCategory) {
-        markerReferences.forEach(entry => {
-            if (selectedCategory === 'all' || entry.category.toString() === selectedCategory) {
-                if (!map.hasLayer(entry.marker)) {
-                    entry.marker.addTo(map);
-                }
+        Object.keys(clusterGroups).forEach(cat => {
+            const group = clusterGroups[cat];
+            if (selectedCategory === 'all' || cat === selectedCategory) {
+                if (!map.hasLayer(group)) map.addLayer(group);
             } else {
-                if (map.hasLayer(entry.marker)) {
-                    map.removeLayer(entry.marker);
-                }
+                if (map.hasLayer(group))  map.removeLayer(group);
             }
         });
     }

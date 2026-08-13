@@ -397,6 +397,8 @@ res = requests.get("https://themurderstonearchive.com/api/v1/events/search?query
     </div>
 </div>
 
+@await Html.PartialAsync("_PromoModal")
+
 @section Scripts {
     <!-- Highlight.js Core Stylesheet -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">

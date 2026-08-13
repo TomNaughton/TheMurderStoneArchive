@@ -37,6 +37,14 @@ namespace TheMurderStoneArchive.Data
         {
             base.OnModelCreating(builder);
 
+            // Enable the PostGIS extension so geometry columns and spatial indexes work.
+            builder.HasPostgresExtension("postgis");
+
+            // Spatial index on location coordinates for efficient bounding-box queries.
+            builder.Entity<Location>()
+                .HasIndex(l => l.Coordinates)
+                .HasMethod("GIST");
+
             builder.Entity<ApplicationUser>()
                 .HasIndex(u => u.PublicUsername)
                 .IsUnique();
@@ -46,6 +54,9 @@ namespace TheMurderStoneArchive.Data
                 .WithMany(m => m.EditSuggestions)
                 .HasForeignKey(s => s.MurderEventId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<MurderEventEditSuggestion>()
+                .HasIndex(s => s.Status);
 
             builder.Entity<MurderEventEditSuggestionPhoto>()
                 .HasOne(p => p.MurderEventEditSuggestion)
